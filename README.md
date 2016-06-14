@@ -6,3 +6,5 @@ This is a simple demonstration of how to make a [Sinatra](http://www.sinatrarb.c
 To run, simply download and execute `ruby app.rb`
 
 ARCHFLAGS="-arch x86_64" bundle install
+
+rackup -p 4567
