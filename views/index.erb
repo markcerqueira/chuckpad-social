@@ -1,17 +1,11 @@
-<h3>Welcome to Chuck Sinatra!</h3>
+<h3>Chuck Nation</h3>
 
-<!--
-<form action="/submit" method="POST">
-	<input type="text" name="model[name]" value="Enter Model Name" />
-	<input type="submit" value="Submit" />
-</form>
--->
-
-<form action="/create_patch" method="POST" enctype="multipart/form-data">
-	<input type="text" name="patch[name]" value="Enter Name for Patch" />	<br>
-	Featured: <input type="checkbox" name="patch[featured]" value="0" />	<br>
-	Documentation: <input type="checkbox" name="patch[documentation]" value="0" />	<br>
-	<input type="file" name="patch[data]">	<br>
-	<input type="submit" value="Create Patch">
+<form action="/patch/create_patch" method="POST" enctype="multipart/form-data">
+  Patch Name: <input type="text" name="patch[name]" value=""/><br>
+  Featured: <input type="checkbox" name="patch[featured]" value="0"/><br>
+  Documentation: <input type="checkbox" name="patch[documentation]" value="0"/><br>
+  File to upload: <input type="file" name="patch[data]"><br>
+  <br>
+  <input type="submit" value="Create Patch">
 
 </form>

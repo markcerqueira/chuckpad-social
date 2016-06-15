@@ -1,24 +1,54 @@
-<h3>All Patches</h3>
+<h3>Chuck Nation - Patches</h3>
 
-<table cellpadding="10">
-  <thead>
-  <th>Name</th>
-  <th>Featured</th>
-  <th>Documentation</th>
-  <th>Data</th>
-  <th>Action</th>
-  </thead>
-  <tbody>
-  <% @patches.each do |patch| %>
-      <tr>
-        <td><%= patch.name %></td>
-        <td><%= patch.featured %></td>
-        <td><%= patch.documentation %></td>
-        <td><%= patch.data %></td>
-        <td>TODO</td>
-      </tr>
-  <% end %>
-  </tbody>
-</table>
+<head>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
 
-<a href="/">Back to Home</a>
+    th, td {
+      text-align: left;
+      padding: 8px;
+    }
+
+    th {
+      background-color: #20c05c;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #d3d3d3
+    }
+  </style>
+</head>
+
+<div style="overflow-x: auto; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px;">
+  <table cellpadding="10">
+    <thead>
+    <th>Id</th>
+    <th>Name</th>
+    <th>Featured</th>
+    <th>Documentation</th>
+    <th>Filename</th>
+    <th>Content Type</th>
+    <th>Actions</th>
+    </thead>
+    <tbody>
+    <% @patches.each do |patch| %>
+        <tr>
+          <td><%= patch.id %></td>
+          <td><%= patch.name %></td>
+          <td><%= patch.featured %></td>
+          <td><%= patch.documentation %></td>
+          <td><%= patch.filename %></td>
+          <td><%= patch.content_type %></td>
+          <td><a href='patch/show/<%= patch.id %>'>Download</a></td>
+        </tr>
+    <% end %>
+    </tbody>
+  </table>
+</div>
+
+<br>
+<a href="/">Back to Patch Creation Page</a>

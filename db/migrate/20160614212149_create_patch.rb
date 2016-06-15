@@ -6,7 +6,11 @@ class CreatePatch < ActiveRecord::Migration
       t.string :name, :null => false
       t.boolean :featured
       t.boolean :documentation
+
       t.binary :data, :null => false
+      t.string :filename
+      t.string :content_type
+
     end
   end
 
