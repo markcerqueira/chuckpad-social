@@ -10,7 +10,7 @@ class ApplicationController < Sinatra::Base
   # sets the view directory correctly
   set :views, Proc.new { File.join(root, "views") }
 
-  get '/' do
+  get '/?' do
     erb :index
   end
 

@@ -2,14 +2,14 @@ require './controllers/application_controller'
 
 class PatchController < ApplicationController
 
-  post '/create_patch' do
+  post '/create_patch/?' do
     print '/create_patch'
     print params[:patch]
 
     @patch = Patch.new(params[:patch]) do |t|
       if params[:patch][:data]
         t.data = params[:patch][:data][:tempfile].read
-        t.filename  = params[:patch][:data][:filename]
+        t.filename = params[:patch][:data][:filename]
         t.content_type = params[:patch][:data][:type]
       end
     end
@@ -35,12 +35,17 @@ class PatchController < ApplicationController
     erb :patches
   end
 
-  get '/delete' do
+  get '/delete/?' do
     Patch.delete_all
     redirect '/patch'
   end
 
-  get '/show/:id' do
+  get '/show/?' do
+    @patches = Patch.all
+    erb :patches
+  end
+
+  get '/show/:id/?' do
     @patch = Patch.find_by_id(params[:id])
 
     attachment @patch.filename
