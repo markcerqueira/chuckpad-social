@@ -1,0 +1,24 @@
+<h3>All Patches</h3>
+
+<table cellpadding="10">
+  <thead>
+  <th>Name</th>
+  <th>Featured</th>
+  <th>Documentation</th>
+  <th>Data</th>
+  <th>Action</th>
+  </thead>
+  <tbody>
+  <% @patches.each do |patch| %>
+      <tr>
+        <td><%= patch.name %></td>
+        <td><%= patch.featured %></td>
+        <td><%= patch.documentation %></td>
+        <td><%= patch.data %></td>
+        <td>TODO</td>
+      </tr>
+  <% end %>
+  </tbody>
+</table>
+
+<a href="/">Back to Home</a>
