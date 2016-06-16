@@ -1,4 +1,5 @@
 require './controllers/application_controller'
+require '../models/patch'
 
 class PatchController < ApplicationController
 

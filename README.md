@@ -13,12 +13,14 @@ Do so if needed. Example: `rvm install ruby-2.3.1`
 * [localhost:9292][http://localhost:9292/]
 
 
-* If you need to reset database on Heroku: `heroku pg:reset`
+* If you need to reset database on Heroku: 
+  `heroku pg:reset DATABASE --app chuck-sinatra`
+  `heroku run rake db:migrate --app chuck-sinatra`
 
 # Links
 * https://www.sitepoint.com/rails-userpassword-authentication-from-scratch-part-i/
 * https://gist.github.com/macek/610596#file-new-html-erb-L2
-* https://www.pgadmin.org/download/macosx4.php
+* https://eggerapps.at/postico/
 * https://www.sitepoint.com/build-a-sinatra-mvc-framework/
 
 [1]: http://postgresapp.com/
