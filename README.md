@@ -22,6 +22,7 @@ Do so if needed. Example: `rvm install ruby-2.3.1`
 * https://gist.github.com/macek/610596#file-new-html-erb-L2
 * https://eggerapps.at/postico/
 * https://www.sitepoint.com/build-a-sinatra-mvc-framework/
+* http://www.sinatrarb.com/intro.html
 
 [1]: http://postgresapp.com/
 

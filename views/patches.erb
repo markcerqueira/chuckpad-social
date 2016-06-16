@@ -43,7 +43,7 @@
           <td><%= patch.documentation %></td>
           <td><%= patch.filename %></td>
           <td><%= patch.content_type %></td>
-          <td><a href='patch/show/<%= patch.id %>'>Download</a></td>
+          <td><a href='patch/download/<%= patch.id %>'>Download</a> / <a href='patch/delete/<%= patch.id %>'>Delete</a></td>
         </tr>
     <% end %>
     </tbody>
@@ -51,4 +51,4 @@
 </div>
 
 <br>
-<a href="/">Back to Patch Creation Page</a>
+<a href="/">Patch Creation Page</a>
