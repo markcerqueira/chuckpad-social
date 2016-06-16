@@ -69,7 +69,7 @@ class PatchController < ApplicationController
     log('/', nil)
 
     @patches = Patch.all
-    erb :patches
+    erb :index
   end
 
   # get '/json/:id/?' do
@@ -103,7 +103,7 @@ class PatchController < ApplicationController
     log('show', nil)
 
     @patches = Patch.all
-    erb :patches
+    erb :index
   end
 
   get '/download/:id/?' do
