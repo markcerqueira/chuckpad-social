@@ -5,10 +5,12 @@ require 'json'
 
 class PatchController < ApplicationController
 
+  TEN_KB_IN_BYTES = 10000
+
   def log(method, o)
     puts 'PatchController ' + method
     if not o.nil?
-      puts ' - ' + (o)
+      puts ' - ' + o.to_s
     end
   end
 
@@ -48,7 +50,13 @@ class PatchController < ApplicationController
 
     @patch = Patch.new(params[:patch]) do |t|
       if params[:patch][:data]
-        t.data = params[:patch][:data][:tempfile].read
+        filename = params[:patch][:data][:tempfile];
+        if File.size(filename) > TEN_KB_IN_BYTES
+          status 500
+          return
+        end
+
+        t.data = filename.read
         t.filename = params[:patch][:data][:filename]
         t.content_type = params[:patch][:data][:type]
       end
