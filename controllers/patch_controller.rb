@@ -1,6 +1,8 @@
 require './controllers/application_controller'
 require './models/patch'
 
+require 'json'
+
 class PatchController < ApplicationController
 
   def log(method, o)
@@ -8,6 +10,37 @@ class PatchController < ApplicationController
     if not o.nil?
       puts ' - ' + (o)
     end
+  end
+
+  def to_json(patch)
+    {
+        'id' => patch.id,
+        'name' => patch.name,
+        'featured' => patch.featured,
+        'documentation' => patch.documentation,
+        'filename' => patch.filename,
+        'content_type' => patch.content_type,
+        'resource' => '/patch/show/' + patch.id.to_s
+    }.to_json
+  end
+
+  # Ghetto but I wasn't able to find a better way to do this!
+  def to_json_list(patches)
+    i = 1
+    length = patches.length
+
+    result = '['
+
+    patches.each do |patch|
+      result += to_json(patch)
+
+      if (i += 1) <= length
+        result += ','
+      end
+    end
+
+    result += ']'
+    return result
   end
 
   post '/create_patch/?' do
@@ -37,6 +70,26 @@ class PatchController < ApplicationController
 
     @patches = Patch.all
     erb :patches
+  end
+
+  # get '/json/:id/?' do
+  #   @patch = Patch.find_by_id(params[:id])
+  #   to_json(@patch)
+  # end
+
+  get '/json/all/?' do
+    log('/json/all', nil)
+    to_json_list(Patch.all)
+  end
+
+  get '/json/featured/?' do
+    log('/json/featured', nil)
+    to_json_list(Patch.where('featured = true'))
+  end
+
+  get '/json/documentation/?' do
+    log('/json/documentation', nil)
+    to_json_list(Patch.where('documentation = true'))
   end
 
   get '/delete/?' do
