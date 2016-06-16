@@ -9,12 +9,30 @@
 
 <h3>Upload a new patch:</h3>
 <form action="/patch/create_patch" method="POST" enctype="multipart/form-data">
-  Patch Name: <input type="text" name="patch[name]" value=""/><br>
-  Featured: <input type="checkbox" name="patch[featured]" value="0"/><br>
-  Documentation: <input type="checkbox" name="patch[documentation]" value="0"/><br>
-  File to upload: <input type="file" name="patch[data]"><br>
-  <br>
-  <input type="submit" value="Create Patch">
+  <table>
+    <tbody>
+        <tr>
+          <td>Patch Name (if blank upload filename will be used)</td>
+          <td><input type="text" name="patch[name]" value=""/></td>
+        </tr>
+        <tr>
+          <td>Featured</td>
+          <td><input type="checkbox" name="patch[featured]" value="0"/></td>
+        </tr>
+        <tr>
+          <td>Documentation</td>
+          <td><input type="checkbox" name="patch[documentation]" value="0"/></td>
+        </tr>
+        <tr>
+          <td>File (10 KB max) to upload</td>
+          <td><input type="file" name="patch[data]"></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><input type="submit" value="Create Patch"></td>
+        </tr>
+    </tbody>
+  </table>
 </form>
 
 <h3>API - best viewed using <a href="https://chrome.google.com/webstore/detail/jsonview/chklaanhfefbnpoihckbnefhakgolnmc">JSONView extension</a></h3>
@@ -24,7 +42,7 @@
 
 <h3>All Patches</h3>
 <div style="overflow-x: auto; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px;">
-  <table cellpadding="10">
+  <table class="fullscreen" cellpadding="10">
     <thead>
     <th>Id</th>
     <th>Name</th>

@@ -1,4 +1,4 @@
-table {
+table.fullscreen {
     border-collapse: collapse;
     width: 100%;
 }
@@ -14,9 +14,9 @@ th {
 }
 
 tr:nth-child(odd) {
-    background-color: white;
+    background-color: #d3d3d3;
 }
 
 tr:nth-child(even) {
-    background-color: #d3d3d3;
+    background-color: white;
 }

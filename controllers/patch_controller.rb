@@ -62,6 +62,10 @@ class PatchController < ApplicationController
       end
     end
 
+    if @patch.name.empty?
+      @patch.name = @patch.filename
+    end
+
     @patch.featured = params[:patch].has_key?('featured')
     @patch.documentation = params[:patch].has_key?('documentation')
 
@@ -75,7 +79,6 @@ class PatchController < ApplicationController
 
   get '/' do
     log('/', nil)
-
     @patches = Patch.all
     erb :index
   end

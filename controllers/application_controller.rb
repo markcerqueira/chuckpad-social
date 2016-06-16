@@ -18,7 +18,6 @@ class ApplicationController < Sinatra::Base
 
   get '/?' do
     @patches = Patch.all
-
     erb :index
   end
 
