@@ -10,6 +10,12 @@ class ApplicationController < Sinatra::Base
   # sets the view directory correctly
   set :views, Proc.new { File.join(root, "views") }
 
+  # Tell Sinatra about special MIME types
+  # http://stackoverflow.com/a/18574464/265791
+  configure do
+    mime_type :ck, 'text/ck'
+  end
+
   get '/?' do
     erb :index
   end
