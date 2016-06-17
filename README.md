@@ -4,7 +4,7 @@
 > 
 > ― Big Boss
 
-Visit [chuck-nation on Heroku][2]. chuck-nation is built using lots of technologies including Sinatra, ActiveRecord, and Postgres. 
+Visit [chuck-nation on Heroku][2]. chuck-nation is built using lots of stuff including Sinatra, ActiveRecord, and Postgres. 
 
 ### Setup
 * Install RVM: `\curl -sSL https://get.rvm.io | bash`
