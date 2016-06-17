@@ -90,16 +90,19 @@ class PatchController < ApplicationController
 
   get '/json/all/?' do
     log('/json/all', nil)
+    content_type 'text/json'
     to_json_list(Patch.all)
   end
 
   get '/json/featured/?' do
     log('/json/featured', nil)
+    content_type 'text/json'
     to_json_list(Patch.where('featured = true'))
   end
 
   get '/json/documentation/?' do
     log('/json/documentation', nil)
+    content_type 'text/json'
     to_json_list(Patch.where('documentation = true'))
   end
 
