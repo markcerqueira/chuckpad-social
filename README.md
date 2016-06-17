@@ -26,3 +26,4 @@ Visit [chuck-nation on Heroku][2]. chuck-nation is built using lots of stuff inc
 
 [1]: http://postgresapp.com/
 [2]: http://chuck-nation.herokuapp.com/
+

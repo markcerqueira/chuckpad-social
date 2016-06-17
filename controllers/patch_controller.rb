@@ -14,7 +14,7 @@ class PatchController < ApplicationController
     end
   end
 
-  def to_json(patch)
+  def to_hash(patch)
     {
         'id' => patch.id,
         'name' => patch.name,
@@ -23,26 +23,15 @@ class PatchController < ApplicationController
         'filename' => patch.filename,
         'content_type' => patch.content_type,
         'resource' => '/patch/show/' + patch.id.to_s
-    }.to_json
+    }
   end
 
-  # Ghetto but I wasn't able to find a better way to do this!
+  def to_json(patch)
+    to_hash(patch).to_json
+  end
+
   def to_json_list(patches)
-    i = 1
-    length = patches.length
-
-    result = '['
-
-    patches.each do |patch|
-      result += to_json(patch)
-
-      if (i += 1) <= length
-        result += ','
-      end
-    end
-
-    result += ']'
-    return result
+    return patches.each_with_object([]) { |patch, array| array << to_hash(patch) }.to_json
   end
 
   post '/create_patch/?' do
@@ -83,10 +72,10 @@ class PatchController < ApplicationController
     erb :index
   end
 
-  # get '/json/:id/?' do
-  #   @patch = Patch.find_by_id(params[:id])
-  #   to_json(@patch)
-  # end
+  get '/json/info/:id/?' do
+    @patch = Patch.find_by_id(params[:id])
+    to_json(@patch)
+  end
 
   get '/json/all/?' do
     log('/json/all', nil)
