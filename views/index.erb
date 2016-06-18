@@ -28,7 +28,7 @@
           <td><input type="file" name="patch[data]"></td>
         </tr>
         <tr>
-          <td></td>
+          <td><input type="hidden" id="" name="web" value="1"/></td>
           <td><input type="submit" value="Create Patch"></td>
         </tr>
     </tbody>
@@ -41,6 +41,11 @@
   <li><a href="/patch/json/all">/patch/json/all</a> - returns all patches</li>
   <li><a href="/patch/json/featured">/patch/json/featured</a> - returns all patches flagged as featured</li>
   <li><a href="/patch/json/documentation">/patch/json/documentation</a> - returns all patches flagged as documentation</li>
+</ul>
+
+<h3>Danger Zone!</h3>
+<ul>
+  <li><a href="/patch/wipe" onclick="return confirm('Are you sure?')">/patch/wipe</a> - wipes ALL patches</li>
 </ul>
 
 <h3>All Patches</h3>

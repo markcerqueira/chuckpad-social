@@ -35,8 +35,12 @@ class PatchController < ApplicationController
   end
 
   post '/create_patch/?' do
-    log('/create_patch', params[:patch])
+    log('/create_patch', params)
 
+    from_web = params[:web].to_s == "1"
+
+    params.delete :web
+    
     @patch = Patch.new(params[:patch]) do |t|
       if params[:patch][:data]
         filename = params[:patch][:data][:tempfile];
@@ -51,7 +55,7 @@ class PatchController < ApplicationController
       end
     end
 
-    if @patch.name.empty?
+    if @patch.name.nil? or @patch.name.empty?
       @patch.name = @patch.filename
     end
 
@@ -60,9 +64,21 @@ class PatchController < ApplicationController
 
     # save
     if @patch.save
-      redirect '/patch'
+      # Do not call redirect when we are called from non-web sources (maybe make separate API?)
+      if from_web
+        log('/create_patch', 'redirecting')
+        redirect '/patch'
+      else
+        status 200
+        return to_hash(@patch).to_json
+      end
     else
-      'Sorry, there was an error!'
+      if from_web
+        'Sorry, there was an error!'
+      else
+        status 500
+        body 'Error!'
+      end
     end
   end
 
@@ -137,6 +153,12 @@ class PatchController < ApplicationController
     end
 
     @patch.delete
+
+    redirect '/patch'
+  end
+
+  get '/wipe/?' do
+    Patch.delete_all
 
     redirect '/patch'
   end
