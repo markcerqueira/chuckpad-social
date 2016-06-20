@@ -1,19 +1,15 @@
 require './controllers/application_controller'
-require './models/patch'
-
-require 'json'
 
 class PatchController < ApplicationController
 
   TEN_KB_IN_BYTES = 10000
 
+  # Helper logging method
   def log(method, o)
-    puts 'PatchController ' + method
-    if not o.nil?
-      puts ' - ' + o.to_s
-    end
+    shared_log('PatchController', method, o)
   end
 
+  # Returns passed patch object as a hash
   def to_hash(patch)
     {
         'id' => patch.id,
@@ -26,14 +22,25 @@ class PatchController < ApplicationController
     }
   end
 
+  # Converts passed patch as a JSON object
   def to_json(patch)
     to_hash(patch).to_json
   end
 
+  # Converts passed list patches as a JSON list
   def to_json_list(patches)
     return patches.each_with_object([]) { |patch, array| array << to_hash(patch) }.to_json
   end
 
+  # Index page that shows index.erb and lists all patches
+  get '/' do
+    log('/', nil)
+    # @patches = Patch.all
+    @patches = Patch.find(:all, :order  => 'id DESC')
+    erb :index
+  end
+
+  # Creates a new patch
   post '/create_patch/?' do
     log('/create_patch', params)
 
@@ -82,49 +89,42 @@ class PatchController < ApplicationController
     end
   end
 
-  get '/' do
-    log('/', nil)
-    @patches = Patch.all
-    erb :index
-  end
-
+  # Returns information for patch with parameter id in JSON format
   get '/json/info/:id/?' do
     @patch = Patch.find_by_id(params[:id])
     to_json(@patch)
   end
 
+  # Returns all patches as a JSON list
   get '/json/all/?' do
     log('/json/all', nil)
     content_type 'text/json'
     to_json_list(Patch.all)
   end
 
+  # Returns all featured patches as a JSON list
   get '/json/featured/?' do
     log('/json/featured', nil)
     content_type 'text/json'
     to_json_list(Patch.where('featured = true'))
   end
 
+  # Returns all documentation patches as a JSON list
   get '/json/documentation/?' do
     log('/json/documentation', nil)
     content_type 'text/json'
     to_json_list(Patch.where('documentation = true'))
   end
 
-  get '/delete/?' do
-    log('delete', nil)
+  # Deletes all patches
+  get '/wipe/?' do
+    log('wipe', nil)
 
     Patch.delete_all
     redirect '/patch'
   end
 
-  get '/show/?' do
-    log('show', nil)
-
-    @patches = Patch.all
-    erb :index
-  end
-
+  # Downloads patch file for given patch id
   get '/download/:id/?' do
     log('download', nil)
 
@@ -141,6 +141,7 @@ class PatchController < ApplicationController
     @patch.data
   end
 
+  # Deletes patch for given patch id
   get '/delete/:id/?' do
     log('delete', nil)
 
@@ -153,12 +154,6 @@ class PatchController < ApplicationController
     end
 
     @patch.delete
-
-    redirect '/patch'
-  end
-
-  get '/wipe/?' do
-    Patch.delete_all
 
     redirect '/patch'
   end

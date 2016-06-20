@@ -1,5 +1,5 @@
 # Created with the following command:
-# => rake db:create_migration NAME=create_model
+#  => rake db:create_migration NAME=create_patch
 class CreatePatch < ActiveRecord::Migration
   def up
     create_table :patches do |t|
@@ -10,7 +10,6 @@ class CreatePatch < ActiveRecord::Migration
       t.binary :data, :null => false
       t.string :filename
       t.string :content_type
-
     end
   end
 

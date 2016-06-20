@@ -1,5 +1,12 @@
 require 'sinatra'
+require 'sinatra/flash'
+require 'sinatra/base'
+
 require 'active_record'
+require 'json'
+
+require './models/patch'
+require './models/user'
 
 class ApplicationController < Sinatra::Base
 
@@ -10,15 +17,34 @@ class ApplicationController < Sinatra::Base
   # sets the view directory correctly
   set :views, Proc.new { File.join(root, "views") }
 
+  # Register for Flash to work properly
+  # TODO We should remove this at some point
+  register Sinatra::Flash
+
   # Tell Sinatra about special MIME types
   # http://stackoverflow.com/a/18574464/265791
   configure do
     mime_type :ck, 'text/ck'
   end
 
+  use Rack::Session::Cookie,
+      :key => 'rack.session',
+      :path => '/',
+      :expire_after => 2592000, # 30 days in seconds
+      :secret => (ENV['RACK_COOKIE_SECRET'] || 'ooY74TAY34UZqYguck4p').to_s
+
+  # Shared logging function for standardized logging to the console
+  def shared_log(controller, method, o)
+    str = controller + '/' + method
+    if not o.nil?
+      str += ' - ' + o.to_s
+    end
+    puts str
+  end
+
+  # Main index page for app will route to the patches index page at erb :index
   get '/?' do
-    @patches = Patch.all
-    erb :index
+    redirect '/patch'
   end
 
   after do

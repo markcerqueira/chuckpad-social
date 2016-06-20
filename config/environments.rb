@@ -1,8 +1,8 @@
-#These Settings Establish the Proper Database Connection for Heroku Postgres
-#The environment variable DATABASE_URL should be in the following format:
-# => postgres://{user}:{password}@{host}:{port}/path
-#This is automatically configured on Heroku, you only need to worry if you also
-#want to run your app locally
+# These Settings Establish the Proper Database Connection for Heroku Postgres.
+# The environment variable DATABASE_URL should be in the following format:
+#  => postgres://{user}:{password}@{host}:{port}/path
+# This is automatically configured on Heroku, you only need to worry if you also
+# want to run your app locally.
 configure :production, :development do
 	db = URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/chuck_sinatra')
 

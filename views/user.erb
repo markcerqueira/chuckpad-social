@@ -1,0 +1,85 @@
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/main.css">
+  <link rel="stylesheet" type="text/css" href="/normalize.css">
+  <link rel="stylesheet" type="text/css" href="/table.css">
+</head>
+
+<h1>Chuck Nation</h1>
+
+<h3>Create User</h3>
+<form action="/user/create_user" method="POST">
+  <table>
+    <tbody>
+    <tr>
+      <td>Username:</td>
+      <td><input type="text" name="user[username]" value=""/></td>
+    </tr>
+    <tr>
+      <td>Email:</td>
+      <td><input type="text" name="user[email]" value=""/></td>
+    </tr>
+    <tr>
+      <td>Password:</td>
+      <td><input type="text" name="password" value=""/></td>
+    </tr>
+    <tr>
+      <td>Admin:</td>
+      <td><input type="checkbox" name="user[admin]" value="0"/></td>
+    </tr>
+    <tr>
+      <td><input type="hidden" id="" name="web" value="1"/></td>
+      <td><input type="submit" value="Create User"></td>
+    </tr>
+    </tbody>
+  </table>
+</form>
+
+<h3>Login</h3>
+<form action="/user/login" method="POST">
+  <table>
+    <tbody>
+    <tr>
+      <td>Username / Email:</td>
+      <td><input type="text" name="username_or_email" value=""/></td>
+    </tr>
+    <tr>
+      <td>Password:</td>
+      <td><input type="text" name="password" value=""/></td>
+    </tr>
+    <tr>
+      <td><input type="hidden" id="" name="web" value="1"/></td>
+      <td><input type="submit" value="Log In"></td>
+    </tr>
+    </tbody>
+  </table>
+</form>
+
+<!-- TODO Remove this (or block it on non-dev running) before release -->
+<h3>All Users</h3>
+<div style="overflow-x: auto; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px;">
+  <table class="fullscreen" cellpadding="10">
+    <thead>
+    <th>Id</th>
+    <th>Username</th>
+    <th>Email</th>
+    <th>Admin</th>
+    <th>Hash</th>
+    <th>Actions</th>
+    </thead>
+    <tbody>
+    <% @users.each do |user| %>
+        <tr>
+          <td><%= user.id %></td>
+          <td><%= user.username %></td>
+          <td><%= user.email %></td>
+          <td><%= user.admin %></td>
+          <td><%= user.password_hash %></td>
+          <td><a href='user/delete/<%= user.id %>'>Delete</a></td>
+        </tr>
+    <% end %>
+    </tbody>
+  </table>
+</div>
+
+</html>

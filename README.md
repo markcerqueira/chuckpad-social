@@ -16,6 +16,9 @@ Visit [chuck-nation on Heroku][2]. chuck-nation is built using lots of stuff inc
 * Locally visit [localhost:9292](http://localhost:9292/). As files are changed the rerun gem will automatically reload the app.
 * If you need to reset database on Heroku: `heroku pg:reset DATABASE --app chuck-nation` and then  `heroku run rake db:migrate --app chuck-nation`
 
+### To Add To README
+* Set environmental variable RACK_COOKIE_SECRET on Heroku
+
 ### Links
 * https://www.sitepoint.com/rails-userpassword-authentication-from-scratch-part-i/
 * https://gist.github.com/macek/610596#file-new-html-erb-L2
@@ -26,4 +29,3 @@ Visit [chuck-nation on Heroku][2]. chuck-nation is built using lots of stuff inc
 
 [1]: http://postgresapp.com/
 [2]: http://chuck-nation.herokuapp.com/
-
