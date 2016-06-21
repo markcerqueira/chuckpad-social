@@ -93,6 +93,15 @@ class PatchController < ApplicationController
   # Returns information for patch with parameter id in JSON format
   get '/json/info/:id/?' do
     patch = Patch.find_by_id(params[:id])
+
+    if patch.nil?
+      if from_native_client(request)
+        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+      else
+        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
+      end
+    end
+
     to_json(patch)
   end
 

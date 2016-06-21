@@ -42,13 +42,12 @@ class UserController < ApplicationController
       log('create_user', 'user already exists')
 
       if from_native_client(request)
-        # TODO Once we support creating users from native clients
+        halt_with_json_msg(500, 'Unable to create user because user already exists')
       else
         redirect_to_index_with_status_msg('Unable to create user because user already exists')
-        return
       end
     end
-
+    
     user = User.new do |u|
       u.username = username
       u.email = email
@@ -60,7 +59,7 @@ class UserController < ApplicationController
     user.save
 
     if from_native_client(request)
-      # TODO Once we support creating users from native clients
+      success_with_json_msg('User created with id ' + user.id.to_s)
     else
       redirect_to_index_with_status_msg('User created with id ' + user.id.to_s)
     end
@@ -74,7 +73,6 @@ class UserController < ApplicationController
     if logged_in_user.nil?
       log('change_password', 'No user currently logged in')
       redirect_to_index_with_status_msg('Unable to change password as no user is currently logged in')
-      return
     end
 
     logged_in_user.salt = BCrypt::Engine.generate_salt
@@ -95,7 +93,6 @@ class UserController < ApplicationController
       log('delete', 'No user found')
       unless from_native_client(request)
         redirect_to_index_with_status_msg('No user found with id ' + params[:id].to_s)
-        return
       end
     end
 
