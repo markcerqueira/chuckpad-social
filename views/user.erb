@@ -6,6 +6,7 @@
 </head>
 
 <h1>ChuckPad Social</h1>
+<b>Latest status message:</b> <%= @latest_status_message %>
 
 <% unless get_logged_in_user.nil? %>
     <h3>Currently Logged In User</h3>
@@ -16,7 +17,6 @@
           <td>Change Password:</td>
           <td><input type="text" name="password" value=""/></td>
           <td><input type="hidden" id="" name="user_id" value=<%= @logged_in_user.id %>/></td>
-          <td><input type="hidden" id="" name="web" value="1"/></td>
           <td><input type="submit" value="Change"></td>
         </form>
       </li>
@@ -47,7 +47,7 @@
       <td><input type="checkbox" name="user[admin]" value="0"/></td>
     </tr>
     <tr>
-      <td><input type="hidden" id="" name="web" value="1"/></td>
+      <td></td>
       <td><input type="submit" value="Create User"></td>
     </tr>
     </tbody>
@@ -67,7 +67,7 @@
       <td><input type="text" name="password" value=""/></td>
     </tr>
     <tr>
-      <td><input type="hidden" id="" name="web" value="1"/></td>
+      <td></td>
       <td><input type="submit" value="Log In"></td>
     </tr>
     </tbody>

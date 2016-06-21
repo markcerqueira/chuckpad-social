@@ -6,6 +6,7 @@
 </head>
 
 <h1>ChuckPad Social</h1>
+<b>Latest status message:</b> <%= @latest_status_message %>
 
 <% unless @logged_in_user.nil? %>
     <h3>Currently Logged In User</h3>
@@ -38,7 +39,7 @@
           <td><input type="file" name="patch[data]"></td>
         </tr>
         <tr>
-          <td><input type="hidden" id="" name="web" value="1"/></td>
+          <td></td>
           <td><input type="submit" value="Create Patch"></td>
         </tr>
     </tbody>

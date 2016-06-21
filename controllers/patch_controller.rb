@@ -32,9 +32,15 @@ class PatchController < ApplicationController
     return patches.each_with_object([]) { |patch, array| array << to_hash(patch) }.to_json
   end
 
+  def redirect_to_index_with_status_msg(msg)
+    session[:status] = msg
+    redirect '/patch'
+  end
+
   # Index page that shows index.erb and lists all patches
   get '/' do
     log('/', nil)
+    @latest_status_message = session[:status]
     @patches = Patch.find(:all, :order  => 'id DESC')
     @logged_in_user = User.get_user(session[:user_id], nil, nil)
     erb :index
@@ -44,14 +50,17 @@ class PatchController < ApplicationController
   post '/create_patch/?' do
     log('/create_patch', params)
 
-    from_web = params[:web].to_s == "1"
-
+    # Make sure file is below file size limit
     if File.size(params[:patch][:data][:tempfile]) > TEN_KB_IN_BYTES
       log('/create_patch', 'File size too large')
-      status 500
-      return
+      if from_native_client(request)
+        halt_with_json_msg(500, 'File size is too large')
+      else
+        redirect_to_index_with_status_msg('Error! File size is too large!')
+      end
     end
 
+    # Create patch
     patch = Patch.new do |p|
       p.name = params[:patch][:name]
       p.featured = params[:patch].has_key?('featured')
@@ -65,22 +74,18 @@ class PatchController < ApplicationController
       end
     end
 
-    # save
+    # Save patch
     if patch.save
-      # Do not call redirect when we are called from non-web sources (maybe make separate API?)
-      if from_web
-        log('/create_patch', 'redirecting')
-        redirect '/patch'
+      if from_native_client(request)
+        success_with_json_msg(to_hash(patch))
       else
-        status 200
-        return to_hash(patch).to_json
+        redirect_to_index_with_status_msg('Patch created with id = ' + patch.id.to_s)
       end
     else
-      if from_web
-        'Sorry, there was an error!'
+      if from_native_client(request)
+        halt_with_json_msg(500, 'Error saving patch file')
       else
-        status 500
-        body 'Error!'
+        redirect_to_index_with_status_msg('There was an error saving the patch')
       end
     end
   end
@@ -115,9 +120,9 @@ class PatchController < ApplicationController
   # Deletes all patches
   get '/wipe/?' do
     log('wipe', nil)
-
+    patchCount = Patch.count
     Patch.delete_all
-    redirect '/patch'
+    redirect_to_index_with_status_msg(patchCount.to_s + ' patches wiped')
   end
 
   # Downloads patch file for given patch id
@@ -127,11 +132,14 @@ class PatchController < ApplicationController
     patch = Patch.find_by_id(params[:id])
 
     if patch.nil?
-      log('download', 'No patch found')
-      status 404
-      return
+      if from_native_client(request)
+        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+      else
+        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
+      end
     end
 
+    # Downloads the patch data
     attachment patch.filename
     content_type 'application/octet-stream'
     patch.data
@@ -145,13 +153,16 @@ class PatchController < ApplicationController
 
     if patch.nil?
       log('delete', 'No patch found')
-      status 404
-      return
+      if from_native_client(request)
+        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+      else
+        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
+      end
     end
 
     patch.delete
 
-    redirect '/patch'
+    redirect_to_index_with_status_msg('Deleted patch with id ' + params[:id].to_s)
   end
 
 end

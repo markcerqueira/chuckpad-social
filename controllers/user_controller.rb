@@ -12,6 +12,7 @@ class UserController < ApplicationController
   get '/' do
     @users = User.find(:all, :order  => 'id DESC')
     @logged_in_user = User.get_user(session[:user_id], nil, nil)
+    @latest_status_message = session[:status]
     erb :user
   end
 
@@ -23,10 +24,13 @@ class UserController < ApplicationController
     return @logged_in_user
   end
 
+  def redirect_to_index_with_status_msg(msg)
+    session[:status] = msg
+    redirect '/user'
+  end
+
   # Creates a new user
   post '/create_user/?' do
-    from_web = params[:web].to_s == "1"
-
     username = params[:user][:username]
     email = params[:user][:email]
     password = params[:password]
@@ -36,9 +40,13 @@ class UserController < ApplicationController
 
     if !existing_user.nil?
       log('create_user', 'user already exists')
-      flash[:status] = 'User already exists';
-      status 404
-      return
+
+      if from_native_client(request)
+        # TODO Once we support creating users from native clients
+      else
+        redirect_to_index_with_status_msg('Unable to create user because user already exists')
+        return
+      end
     end
 
     user = User.new do |u|
@@ -51,35 +59,30 @@ class UserController < ApplicationController
 
     user.save
 
-    redirect '/user'
+    if from_native_client(request)
+      # TODO Once we support creating users from native clients
+    else
+      redirect_to_index_with_status_msg('User created with id ' + user.id.to_s)
+    end
   end
 
   post '/change_password/?' do
-    from_web = params[:web].to_s == "1"
-
     logged_in_user = User.get_user(session[:user_id], nil, nil)
+
+    # TODO Check password length
 
     if logged_in_user.nil?
       log('change_password', 'No user currently logged in')
-      status 404
-
-      if from_web
-        redirect '/user'
-      else
-        return
-      end
+      redirect_to_index_with_status_msg('Unable to change password as no user is currently logged in')
+      return
     end
 
-    new_password = params[:password]
-
-    puts new_password
-
     logged_in_user.salt = BCrypt::Engine.generate_salt
-    logged_in_user.password_hash = BCrypt::Engine.hash_secret(new_password, logged_in_user.salt)
+    logged_in_user.password_hash = BCrypt::Engine.hash_secret(params[:password], logged_in_user.salt)
 
     logged_in_user.save
 
-    redirect '/user'
+    redirect_to_index_with_status_msg('Password updated')
   end
 
   # Deletes user with the passed id
@@ -90,39 +93,67 @@ class UserController < ApplicationController
 
     if user.nil?
       log('delete', 'No user found')
-      status 404
-      return
+      unless from_native_client(request)
+        redirect_to_index_with_status_msg('No user found with id ' + params[:id].to_s)
+        return
+      end
     end
 
     user.delete
 
-    redirect '/user'
+    unless from_native_client(request)
+      redirect_to_index_with_status_msg('User deleted with id ' + user.id.to_s)
+    end
   end
 
   # Clears session cookie
   get '/logout/:id/?' do
     log('logout', params)
+    user_id = session[:user_id];
     session[:user_id] = nil
-    redirect '/user'
+    redirect_to_index_with_status_msg('Logged out user with id ' + user_id.to_s)
   end
 
   # Logs in as a user
   post '/login/?' do
     user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
 
+    error = false
+    error_message = nil
+
     if user.nil?
       log('/login', 'Login failed; no user found')
-      status 404
-      return
+
+      error = true
+      error_message = 'Unable to find user with details ' + params[:username_or_email]
     end
 
-    if user.password_hash ==  BCrypt::Engine.hash_secret(params[:password], user.salt)
-      session[:user_id] = user.id
+    unless error
+      if user.password_hash == BCrypt::Engine.hash_secret(params[:password], user.salt)
+        session[:user_id] = user.id
+        # No current notion of session for native clients
+      else
+        log('/login', 'Bad password')
+
+        error = true
+        error_message = 'Login failed because of bad password'
+      end
+    end
+
+    if error
+      if from_native_client(request)
+        halt_with_json_msg(500, error_message)
+      else
+        redirect_to_index_with_status_msg(error_message)
+      end
     else
-      log('/login', 'Login failed; bad credentials')
+      success_msg = 'Logged in successfully'
+      if from_native_client(request)
+        success_with_json_msg(success_msg)
+      else
+        redirect_to_index_with_status_msg(success_msg)
+      end
     end
-
-    redirect '/user'
   end
 
 end
