@@ -3,7 +3,7 @@
 #  => postgres://{user}:{password}@{host}:{port}/path
 # This is automatically configured on Heroku, you only need to worry if you also
 # want to run your app locally.
-configure :production, :development do
+configure :production, :development, :test do
 	db = URI.parse(ENV['DATABASE_URL'] || 'postgres://localhost/chuck_sinatra')
 
 	ActiveRecord::Base.establish_connection(
