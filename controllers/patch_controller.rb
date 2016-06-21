@@ -16,8 +16,11 @@ class PatchController < ApplicationController
         'name' => patch.name,
         'featured' => patch.featured,
         'documentation' => patch.documentation,
+        # TODO This can be removed at some point since hidden things should not be seen externally
+        'hidden' => patch.hidden,
         'filename' => patch.filename,
         'content_type' => patch.content_type,
+        'creator_id' => patch.creator_id,
         'resource' => '/patch/show/' + patch.id.to_s
     }
   end
@@ -50,6 +53,25 @@ class PatchController < ApplicationController
   post '/create_patch/?' do
     log('/create_patch', params)
 
+    # User must be logged in to create a patch
+    current_user = nil;
+    if from_native_client(request)
+      # Native clients: this will return nil if we cannot find the user OR the password is incorrect
+      current_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
+    else
+      # Web clients: we know they are authenticated if session[:user_id] exists
+      current_user = User.get_user(session[:user_id], nil, nil)
+    end
+
+    if current_user.nil?
+      log('/create_patch', 'No valid user found')
+      if from_native_client(request)
+        halt_with_json_msg(500, 'You must be logged in to create a patch')
+      else
+        redirect_to_index_with_status_msg('Error! You must be logged in to create a patch')
+      end
+    end
+
     # Make sure file is below file size limit
     if File.size(params[:patch][:data][:tempfile]) > TEN_KB_IN_BYTES
       log('/create_patch', 'File size too large')
@@ -65,10 +87,11 @@ class PatchController < ApplicationController
       p.name = params[:patch][:name]
       p.featured = params[:patch].has_key?('featured')
       p.documentation = params[:patch].has_key?('documentation')
+      p.hidden = params[:patch].has_key?('hidden')
       p.data = params[:patch][:data][:tempfile].read
       p.filename = params[:patch][:data][:filename]
       p.content_type = params[:patch][:data][:type]
-
+      p.creator_id = current_user.id
       if p.name.nil? or p.name.empty?
         p.name = p.filename
       end
@@ -109,21 +132,24 @@ class PatchController < ApplicationController
   get '/json/all/?' do
     log('/json/all', nil)
     content_type 'text/json'
-    to_json_list(Patch.all)
+    # TODO Once we finalize schema for 1.0 we can remove IS null
+    to_json_list(Patch.where('hidden IS NOT true OR hidden IS null'))
   end
 
   # Returns all featured patches as a JSON list
   get '/json/featured/?' do
     log('/json/featured', nil)
     content_type 'text/json'
-    to_json_list(Patch.where('featured = true'))
+    # TODO Once we finalize schema for 1.0 we can remove IS null
+    to_json_list(Patch.where('featured = true').where('hidden != false OR hidden IS null'))
   end
 
   # Returns all documentation patches as a JSON list
   get '/json/documentation/?' do
     log('/json/documentation', nil)
     content_type 'text/json'
-    to_json_list(Patch.where('documentation = true'))
+    # TODO Once we finalize schema for 1.0 we can remove IS null
+    to_json_list(Patch.where('documentation = true').where('hidden != false OR hidden IS null'))
   end
 
   # Deletes all patches
@@ -172,6 +198,32 @@ class PatchController < ApplicationController
     patch.delete
 
     redirect_to_index_with_status_msg('Deleted patch with id ' + params[:id].to_s)
+  end
+
+  get '/toggle_hidden/:id/?' do
+    log('toggle_hidden', nil)
+
+    patch = Patch.find_by_id(params[:id])
+
+    # We do this elsewhere so refactor it out somewhere?
+    if patch.nil?
+      log('toggle_hidden', 'No patch found')
+      if from_native_client(request)
+        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+      else
+        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
+      end
+    end
+
+    if patch.hidden
+      patch.hidden = false
+    else
+      patch.hidden = true
+    end
+
+    patch.save
+
+    redirect_to_index_with_status_msg('Toggled hidden state for patch with id ' + params[:id].to_s)
   end
 
 end

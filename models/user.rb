@@ -28,4 +28,23 @@ class User < ActiveRecord::Base
     return nil
   end
 
+  def self.get_user_with_verification(username, email, password)
+    user = get_user(nil, username, email)
+    if user.password_hash == BCrypt::Engine.hash_secret(password, user.salt)
+      return user
+    end
+
+    return nil
+  end
+
+  def self.get_creator_display_str(id)
+    user = get_user(id, nil, nil)
+
+    if user.nil?
+      return 'Orphaned'
+    end
+
+    return user.username + ' (' + user.id.to_s + ')'
+  end
+
 end

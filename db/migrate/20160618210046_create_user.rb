@@ -9,7 +9,6 @@ class CreateUser < ActiveRecord::Migration
       t.string :password_hash, :null => false
 
       t.boolean :admin
-
     end
   end
 

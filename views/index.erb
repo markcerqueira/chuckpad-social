@@ -11,11 +11,11 @@
 <% unless @logged_in_user.nil? %>
     <h3>Currently Logged In User</h3>
     <ul>
-      <li>Logged in as: <%= @logged_in_user.username %></li>
+      <li>Username: <b><%= @logged_in_user.username %></b></li>
       <li><a href='user/logout/<%= @logged_in_user.id %>'>Log Out</a></li>
     </ul>
 <% else %>
-    <h3>You are not logged in.</h3>
+    <h3>You are not logged in. Go to the <a href="/user">/user</a> page to log in.</h3>
 <% end %>
 
 <h3>Upload a new patch:</h3>
@@ -35,6 +35,10 @@
           <td><input type="checkbox" name="patch[documentation]" value="0"/></td>
         </tr>
         <tr>
+          <td>Hidden</td>
+          <td><input type="checkbox" name="patch[hidden]" value="0"/></td>
+        </tr>
+        <tr>
           <td>File (10 KB max) to upload</td>
           <td><input type="file" name="patch[data]"></td>
         </tr>
@@ -49,9 +53,9 @@
 <h3>API - best viewed using <a href="https://chrome.google.com/webstore/detail/jsonview/chklaanhfefbnpoihckbnefhakgolnmc">JSONView extension</a></h3>
 <ul>
   <li><a href="/patch/json/info/1">/patch/json/info/1</a> - returns information on patch with id = 1</li>
-  <li><a href="/patch/json/all">/patch/json/all</a> - returns all patches</li>
-  <li><a href="/patch/json/featured">/patch/json/featured</a> - returns all patches flagged as featured</li>
-  <li><a href="/patch/json/documentation">/patch/json/documentation</a> - returns all patches flagged as documentation</li>
+  <li><a href="/patch/json/all">/patch/json/all</a> - returns all unhidden patches</li>
+  <li><a href="/patch/json/featured">/patch/json/featured</a> - returns all unhidden patches flagged as featured</li>
+  <li><a href="/patch/json/documentation">/patch/json/documentation</a> - returns all unhidden patches flagged as documentation</li>
   <li><a href="/user">/user</a> - page to explore the user API</li>
 </ul>
 
@@ -61,6 +65,7 @@
 </ul>
 
 <h3>All Patches (sorted by most recently created)</h3>
+<li>Items created before users were required for patch creation will displayed 'Orphaned' as their creator</li><br>
 <div style="overflow-x: auto; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px;">
   <table class="fullscreen" cellpadding="10">
     <thead>
@@ -68,8 +73,10 @@
     <th>Name</th>
     <th>Featured</th>
     <th>Documentation</th>
+    <th>Hidden</th>
     <th>Filename</th>
     <th>Content Type</th>
+    <th>Creator</th>
     <th>Actions</th>
     </thead>
     <tbody>
@@ -79,9 +86,13 @@
           <td><%= patch.name %></td>
           <td><%= patch.featured %></td>
           <td><%= patch.documentation %></td>
+          <td><%= patch.hidden %></td>
           <td><%= patch.filename %></td>
           <td><%= patch.content_type %></td>
-          <td><a href='patch/download/<%= patch.id %>'>Download</a> / <a href='patch/delete/<%= patch.id %>'>Delete</a></td>
+          <td><%= User.get_creator_display_str(patch.creator_id) %></td>
+          <td><a href='patch/download/<%= patch.id %>'>Download</a>
+            / <a href='patch/delete/<%= patch.id %>'>Delete</a>
+            / <a href='patch/toggle_hidden/<%= patch.id %>'>Toggle Hidden</a></td>
         </tr>
     <% end %>
     </tbody>
