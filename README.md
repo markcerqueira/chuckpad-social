@@ -14,7 +14,7 @@ Visit [chuckpad-social on Heroku][2]. chuckpad-social is built using lots of stu
 * Run `rake db:migrate` to run all migrations on the database.
 * `bundle exec rerun 'rackup -p 9292'`
 * Locally visit [localhost:9292](http://localhost:9292/). As files are changed the rerun gem will automatically reload the app.
-* If you need to reset database on Heroku: `heroku pg:reset DATABASE --app chuckpad-social` and then  `heroku run rake db:migrate --app chuckpad-social`
+* If you need to reset database on Heroku: `heroku pg:reset DATABASE --app chuckpad-social` and then `heroku run rake db:migrate --app chuckpad-social`
 
 ### To Add To README
 * Set environmental variable RACK_COOKIE_SECRET on Heroku
