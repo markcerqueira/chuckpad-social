@@ -7,6 +7,25 @@
 
 <h1>ChuckPad Social</h1>
 
+<% unless get_logged_in_user.nil? %>
+    <h3>Currently Logged In User</h3>
+    <ul>
+      <li>Username: <%= @logged_in_user.username %></li>
+      <li>
+        <form action="/user/change_password" method="POST">
+          <td>Change Password:</td>
+          <td><input type="text" name="password" value=""/></td>
+          <td><input type="hidden" id="" name="user_id" value=<%= @logged_in_user.id %>/></td>
+          <td><input type="hidden" id="" name="web" value="1"/></td>
+          <td><input type="submit" value="Change"></td>
+        </form>
+      </li>
+      <li><a href='user/logout/<%= @logged_in_user.id %>'>Log Out</a></li>
+    </ul>
+<% else %>
+    <h3>You are not logged in.</h3>
+<% end %>
+
 <h3>Create User</h3>
 <form action="/user/create_user" method="POST">
   <table>

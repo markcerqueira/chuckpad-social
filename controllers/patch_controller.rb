@@ -35,8 +35,8 @@ class PatchController < ApplicationController
   # Index page that shows index.erb and lists all patches
   get '/' do
     log('/', nil)
-    # @patches = Patch.all
     @patches = Patch.find(:all, :order  => 'id DESC')
+    @logged_in_user = User.get_user(session[:user_id], nil, nil)
     erb :index
   end
 
@@ -46,38 +46,34 @@ class PatchController < ApplicationController
 
     from_web = params[:web].to_s == "1"
 
-    params.delete :web
-    
-    @patch = Patch.new(params[:patch]) do |t|
-      if params[:patch][:data]
-        filename = params[:patch][:data][:tempfile];
-        if File.size(filename) > TEN_KB_IN_BYTES
-          status 500
-          return
-        end
+    if File.size(params[:patch][:data][:tempfile]) > TEN_KB_IN_BYTES
+      log('/create_patch', 'File size too large')
+      status 500
+      return
+    end
 
-        t.data = filename.read
-        t.filename = params[:patch][:data][:filename]
-        t.content_type = params[:patch][:data][:type]
+    patch = Patch.new do |p|
+      p.name = params[:patch][:name]
+      p.featured = params[:patch].has_key?('featured')
+      p.documentation = params[:patch].has_key?('documentation')
+      p.data = params[:patch][:data][:tempfile].read
+      p.filename = params[:patch][:data][:filename]
+      p.content_type = params[:patch][:data][:type]
+
+      if p.name.nil? or p.name.empty?
+        p.name = p.filename
       end
     end
 
-    if @patch.name.nil? or @patch.name.empty?
-      @patch.name = @patch.filename
-    end
-
-    @patch.featured = params[:patch].has_key?('featured')
-    @patch.documentation = params[:patch].has_key?('documentation')
-
     # save
-    if @patch.save
+    if patch.save
       # Do not call redirect when we are called from non-web sources (maybe make separate API?)
       if from_web
         log('/create_patch', 'redirecting')
         redirect '/patch'
       else
         status 200
-        return to_hash(@patch).to_json
+        return to_hash(patch).to_json
       end
     else
       if from_web
@@ -91,8 +87,8 @@ class PatchController < ApplicationController
 
   # Returns information for patch with parameter id in JSON format
   get '/json/info/:id/?' do
-    @patch = Patch.find_by_id(params[:id])
-    to_json(@patch)
+    patch = Patch.find_by_id(params[:id])
+    to_json(patch)
   end
 
   # Returns all patches as a JSON list
@@ -128,32 +124,32 @@ class PatchController < ApplicationController
   get '/download/:id/?' do
     log('download', nil)
 
-    @patch = Patch.find_by_id(params[:id])
+    patch = Patch.find_by_id(params[:id])
 
-    if @patch.nil?
+    if patch.nil?
       log('download', 'No patch found')
       status 404
       return
     end
 
-    attachment @patch.filename
+    attachment patch.filename
     content_type 'application/octet-stream'
-    @patch.data
+    patch.data
   end
 
   # Deletes patch for given patch id
   get '/delete/:id/?' do
     log('delete', nil)
 
-    @patch = Patch.find_by_id(params[:id])
+    patch = Patch.find_by_id(params[:id])
 
-    if @patch.nil?
+    if patch.nil?
       log('delete', 'No patch found')
       status 404
       return
     end
 
-    @patch.delete
+    patch.delete
 
     redirect '/patch'
   end

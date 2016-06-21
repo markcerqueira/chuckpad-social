@@ -7,6 +7,16 @@
 
 <h1>ChuckPad Social</h1>
 
+<% unless @logged_in_user.nil? %>
+    <h3>Currently Logged In User</h3>
+    <ul>
+      <li>Logged in as: <%= @logged_in_user.username %></li>
+      <li><a href='user/logout/<%= @logged_in_user.id %>'>Log Out</a></li>
+    </ul>
+<% else %>
+    <h3>You are not logged in.</h3>
+<% end %>
+
 <h3>Upload a new patch:</h3>
 <form action="/patch/create_patch" method="POST" enctype="multipart/form-data">
   <table>
