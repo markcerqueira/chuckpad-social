@@ -42,7 +42,8 @@ class UserController < ApplicationController
       log('create_user', 'user already exists')
 
       if from_native_client(request)
-        halt_with_json_msg(500, 'Unable to create user because user already exists')
+        fail_with_json_msg(500, 'Unable to create user because user already exists')
+        return
       else
         redirect_to_index_with_status_msg('Unable to create user because user already exists')
       end
@@ -66,13 +67,24 @@ class UserController < ApplicationController
   end
 
   post '/change_password/?' do
-    logged_in_user = User.get_user(session[:user_id], nil, nil)
+    logged_in_user = nil;
+
+    if from_native_client(request)
+      logged_in_user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
+    else
+      logged_in_user = User.get_user(session[:user_id], nil, nil)
+    end
 
     # TODO Check password length
 
     if logged_in_user.nil?
-      log('change_password', 'No user currently logged in')
-      redirect_to_index_with_status_msg('Unable to change password as no user is currently logged in')
+      log('change_password', 'No user found')
+      if from_native_client(request)
+        fail_with_json_msg(500, 'Could not find user')
+        return;
+      else
+        redirect_to_index_with_status_msg('Unable to change password as no user is currently logged in')
+      end
     end
 
     logged_in_user.salt = BCrypt::Engine.generate_salt
@@ -80,7 +92,11 @@ class UserController < ApplicationController
 
     logged_in_user.save
 
-    redirect_to_index_with_status_msg('Password updated')
+    if from_native_client(request)
+      success_with_json_msg('Password updated')
+    else
+      redirect_to_index_with_status_msg('Password updated')
+    end
   end
 
   # Deletes user with the passed id
@@ -139,7 +155,8 @@ class UserController < ApplicationController
 
     if error
       if from_native_client(request)
-        halt_with_json_msg(500, error_message)
+        fail_with_json_msg(500, error_message)
+        return
       else
         redirect_to_index_with_status_msg(error_message)
       end

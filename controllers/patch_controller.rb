@@ -66,7 +66,8 @@ class PatchController < ApplicationController
     if current_user.nil?
       log('/create_patch', 'No valid user found')
       if from_native_client(request)
-        halt_with_json_msg(500, 'You must be logged in to create a patch')
+        fail_with_json_msg(500, 'You must be logged in to create a patch')
+        return
       else
         redirect_to_index_with_status_msg('Error! You must be logged in to create a patch')
       end
@@ -76,7 +77,8 @@ class PatchController < ApplicationController
     if File.size(params[:patch][:data][:tempfile]) > TEN_KB_IN_BYTES
       log('/create_patch', 'File size too large')
       if from_native_client(request)
-        halt_with_json_msg(500, 'File size is too large')
+        fail_with_json_msg(500, 'File size is too large')
+        return
       else
         redirect_to_index_with_status_msg('Error! File size is too large!')
       end
@@ -106,7 +108,8 @@ class PatchController < ApplicationController
       end
     else
       if from_native_client(request)
-        halt_with_json_msg(500, 'Error saving patch file')
+        fail_with_json_msg(500, 'Error saving patch file')
+        return
       else
         redirect_to_index_with_status_msg('There was an error saving the patch')
       end
@@ -119,7 +122,8 @@ class PatchController < ApplicationController
 
     if patch.nil?
       if from_native_client(request)
-        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        return
       else
         redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
       end
@@ -168,7 +172,8 @@ class PatchController < ApplicationController
 
     if patch.nil?
       if from_native_client(request)
-        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        return
       else
         redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
       end
@@ -189,7 +194,8 @@ class PatchController < ApplicationController
     if patch.nil?
       log('delete', 'No patch found')
       if from_native_client(request)
-        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        return
       else
         redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
       end
@@ -209,7 +215,8 @@ class PatchController < ApplicationController
     if patch.nil?
       log('toggle_hidden', 'No patch found')
       if from_native_client(request)
-        halt_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+        return
       else
         redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
       end

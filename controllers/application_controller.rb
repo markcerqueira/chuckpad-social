@@ -46,17 +46,27 @@ class ApplicationController < Sinatra::Base
     return request.user_agent.include? CHUCKPAD_SOCIAL_IOS
   end
 
-  def halt_with_json_msg(code, msg)
-    halt code, {'Content-Type' => 'application/json'}, {
+  def fail_with_json_msg(code, msg)
+    response_body = {
         'code' => code,
         'message' => msg
     }.to_json
+
+    # We want the HTTP request to succeed (200)
+    status 200
+    content_type 'application/json'
+    body response_body
   end
 
   def success_with_json_msg(msg)
+    response_body =     {
+        'code' => 200,
+        'message' => msg
+    }.to_json
+
     status 200
     content_type 'application/json'
-    msg.to_json
+    body response_body
   end
 
   # Main index page for app will route to the patches index page at erb :index
