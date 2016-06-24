@@ -94,7 +94,8 @@
           <td><%= user.email %></td>
           <td><%= user.admin %></td>
           <td><%= user.password_hash %></td>
-          <td><a href='user/delete/<%= user.id %>'>Delete</a></td>
+          <td><a href='user/delete/<%= user.id %>'>Delete</a> /
+              <a href='patch/json/user/<%= user.id %>'>Patch List</a></td>
         </tr>
     <% end %>
     </tbody>

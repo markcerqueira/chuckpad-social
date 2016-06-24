@@ -28,6 +28,9 @@ class User < ActiveRecord::Base
     return nil
   end
 
+  # Finds user by username or email (using logic in get_user function) and
+  # then verifies that the provided password is correct. If the user is not
+  # found or the password is incorrect, nil is returned.
   def self.get_user_with_verification(username, email, password)
     user = get_user(nil, username, email)
     if user.password_hash == BCrypt::Engine.hash_secret(password, user.salt)
@@ -37,6 +40,7 @@ class User < ActiveRecord::Base
     return nil
   end
 
+  # Returns a string with the username and user id of the user
   def self.get_creator_display_str(id)
     user = get_user(id, nil, nil)
 

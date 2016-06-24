@@ -40,6 +40,68 @@ class PatchController < ApplicationController
     redirect '/patch'
   end
 
+  def user_can_modify_patch(caller, request, current_user, patch)
+    if current_user.admin
+      return true
+    end
+
+    if current_user.id == patch.creator_id
+      return true;
+    end
+
+    if from_native_client(request)
+      fail_with_json_msg(500, 'User does not have permission to modify patch with id ' + patch.id.to_s)
+    else
+      redirect_to_index_with_status_msg('User does not have permission to modify patch with id ' + patch.id.to_s)
+    end
+
+    return false
+  end
+
+  def get_patch(caller, request, patch_id)
+    patch = Patch.find_by_id(patch_id)
+    if patch.nil?
+      log(caller, 'No patch found')
+      if from_native_client(request)
+        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
+      else
+        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
+      end
+
+      return nil, true
+    end
+
+    return patch, false
+  end
+
+  # TODO Fail silently option
+
+  def get_user(caller, request, params)
+    if from_native_client(request)
+      # Native clients: this will return nil if we cannot find the user OR the password is incorrect
+      current_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
+    else
+      # Web clients: we know they are authenticated if session[:user_id] exists
+      current_user = User.get_user(session[:user_id], nil, nil)
+    end
+
+    if current_user.nil?
+      log(caller, 'No valid user found')
+      if from_native_client(request)
+        # TODO
+        fail_with_json_msg(500, 'You must be logged in to create a patch')
+      else
+        # TODO
+        redirect_to_index_with_status_msg('Error! You must be logged in to create a patch')
+      end
+
+      # nil = no (validated) user found, true = found an error
+      return nil, true
+    end
+
+    return current_user, false
+  end
+
   # Index page that shows index.erb and lists all patches
   get '/' do
     log('/', nil)
@@ -54,23 +116,10 @@ class PatchController < ApplicationController
     log('/create_patch', params)
 
     # User must be logged in to create a patch
-    current_user = nil;
-    if from_native_client(request)
-      # Native clients: this will return nil if we cannot find the user OR the password is incorrect
-      current_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
-    else
-      # Web clients: we know they are authenticated if session[:user_id] exists
-      current_user = User.get_user(session[:user_id], nil, nil)
-    end
-
-    if current_user.nil?
-      log('/create_patch', 'No valid user found')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'You must be logged in to create a patch')
-        return
-      else
-        redirect_to_index_with_status_msg('Error! You must be logged in to create a patch')
-      end
+    current_user, error = get_user('/create_patch', request, params)
+    if error
+      log('/create_patch', 'get_user call had an error')
+      return
     end
 
     # Make sure file is below file size limit
@@ -118,18 +167,34 @@ class PatchController < ApplicationController
 
   # Returns information for patch with parameter id in JSON format
   get '/json/info/:id/?' do
-    patch = Patch.find_by_id(params[:id])
-
-    if patch.nil?
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
-        return
-      else
-        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
-      end
+    patch, error = get_patch('/json/info', request, params[:id])
+    if error
+      log('/json/info', 'get_patch call had an error')
+      return
     end
 
     to_json(patch)
+  end
+
+  get '/json/user/:id/?' do
+    log('/json/user', nil)
+    content_type 'text/json'
+
+
+    show_hidden = false
+    current_user, error = get_user('/json/user', request, params)
+    unless current_user.nil?
+      show_hidden = current_user.id = params[:id]
+    end
+
+    patches = Patch.where('creator_id = ' + params[:id].to_s)
+
+    unless show_hidden
+      # TODO Once we finalize schema for 1.0 we can remove IS null
+      patches = patches.where('hidden IS NOT true OR hidden IS null')
+    end
+
+    to_json_list(patches)
   end
 
   # Returns all patches as a JSON list
@@ -156,27 +221,12 @@ class PatchController < ApplicationController
     to_json_list(Patch.where('documentation = true').where('hidden != false OR hidden IS null'))
   end
 
-  # Deletes all patches
-  get '/wipe/?' do
-    log('wipe', nil)
-    patchCount = Patch.count
-    Patch.delete_all
-    redirect_to_index_with_status_msg(patchCount.to_s + ' patches wiped')
-  end
-
   # Downloads patch file for given patch id
   get '/download/:id/?' do
-    log('download', nil)
-
-    patch = Patch.find_by_id(params[:id])
-
-    if patch.nil?
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
-        return
-      else
-        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
-      end
+    patch, error = get_patch('/download', request, params[:id])
+    if error
+      log('/download', 'get_patch call had an error')
+      return
     end
 
     # Downloads the patch data
@@ -187,18 +237,24 @@ class PatchController < ApplicationController
 
   # Deletes patch for given patch id
   get '/delete/:id/?' do
-    log('delete', nil)
+    log('/delete', nil)
 
-    patch = Patch.find_by_id(params[:id])
+    patch, error = get_patch('/delete', request, params[:id])
+    if error
+      log('/delete', 'get_patch call had an error')
+      return
+    end
 
-    if patch.nil?
-      log('delete', 'No patch found')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
-        return
-      else
-        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
-      end
+    # Creating user (or admin) must be logged in to delete a patch
+    current_user, error = get_user('/delete', request, params)
+    if error
+      log('/delete', 'get_user call had an error')
+      return
+    end
+
+    unless user_can_modify_patch('/delete', request, current_user, patch)
+      log('/delete', 'user_can_modify_patch call had an error')
+      return
     end
 
     patch.delete
@@ -209,17 +265,23 @@ class PatchController < ApplicationController
   get '/toggle_hidden/:id/?' do
     log('toggle_hidden', nil)
 
-    patch = Patch.find_by_id(params[:id])
+    # TODO These three blocks are used a lot; refactor
+    patch, error = get_patch('/toggle_hidden', request, params[:id])
+    if error
+      log('/toggle_hidden', 'get_patch call had an error')
+      return
+    end
 
-    # We do this elsewhere so refactor it out somewhere?
-    if patch.nil?
-      log('toggle_hidden', 'No patch found')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
-        return
-      else
-        redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
-      end
+    # Creating user (or admin) must be logged in to delete a patch
+    current_user, error = get_user('/toggle_hidden', request, params)
+    if error
+      log('/toggle_hidden', 'get_user call had an error')
+      return
+    end
+
+    unless user_can_modify_patch('/toggle_hidden', request, current_user, patch)
+      log('/toggle_hidden', 'user_can_modify_patch call had an error')
+      return
     end
 
     if patch.hidden
