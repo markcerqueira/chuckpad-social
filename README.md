@@ -11,7 +11,7 @@ Visit [chuckpad-social on Heroku][2]. chuckpad-social is built using lots of stu
 * When you cd into the chuckpad-social directory, you may be prompted to install the right version of Ruby. Do so if needed. Example: `rvm install ruby-2.3.1`
 * Install the rest of the gems: `ARCHFLAGS="-arch x86_64" bundle install`
 * Install Postgres and create the database if you have not yet. `psql` and then `CREATE DATABASE chuckpad-social;`
-* Run `rake db:migrate` to run all migrations on the database.
+* Run `bundle exec rake db:migrate` to run all migrations on the database.
 * `bundle exec rerun 'rackup -p 9292'`
 * Locally visit [localhost:9292](http://localhost:9292/). As files are changed the rerun gem will automatically reload the app.
 * If you need to reset database on Heroku: `heroku pg:reset DATABASE --app chuckpad-social` and then `heroku run rake db:migrate --app chuckpad-social`
