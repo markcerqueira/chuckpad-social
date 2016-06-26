@@ -1,4 +1,5 @@
 class User < ActiveRecord::Base
+  has_many :patches, foreign_key: :creator_id
 
   # Find a user by id, username, or email. If multiple params are passed
   # they will search in order declared (e.g. search by id first, username
@@ -40,15 +41,8 @@ class User < ActiveRecord::Base
     return nil
   end
 
-  # Returns a string with the username and user id of the user
-  def self.get_creator_display_str(id)
-    user = get_user(id, nil, nil)
-
-    if user.nil?
-      return 'Orphaned'
-    end
-
-    return user.username + ' (' + user.id.to_s + ')'
+  def display_str
+    username + ' (' + id.to_s + ')'
   end
 
 end

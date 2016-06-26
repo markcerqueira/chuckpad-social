@@ -85,7 +85,7 @@
           <td><%= patch.hidden %></td>
           <td><%= patch.filename %></td>
           <td><%= patch.content_type %></td>
-          <td><%= User.get_creator_display_str(patch.creator_id) %></td>
+          <td><%= patch.creator_display_str %></td>
           <td><a href='patch/download/<%= patch.id %>'>Download</a>
             / <a href='patch/delete/<%= patch.id %>'>Delete</a>
             / <a href='patch/toggle_hidden/<%= patch.id %>'>Toggle Hidden</a></td>
