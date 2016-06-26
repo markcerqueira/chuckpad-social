@@ -26,53 +26,63 @@
     <h3>You are not logged in.</h3>
 <% end %>
 
-<h3>Create User</h3>
-<form action="/user/create_user" method="POST">
-  <table>
-    <tbody>
-    <tr>
-      <td>Username:</td>
-      <td><input type="text" name="user[username]" value=""/></td>
-    </tr>
-    <tr>
-      <td>Email:</td>
-      <td><input type="text" name="user[email]" value=""/></td>
-    </tr>
-    <tr>
-      <td>Password:</td>
-      <td><input type="text" name="password" value=""/></td>
-    </tr>
-    <tr>
-      <td>Admin:</td>
-      <td><input type="checkbox" name="user[admin]" value="0"/></td>
-    </tr>
-    <tr>
-      <td></td>
-      <td><input type="submit" value="Create User"></td>
-    </tr>
-    </tbody>
-  </table>
-</form>
+<div style="width: 100%; display: table;">
+  <div style="display: table-row">
+    <!-- Create User -->
+    <div style="width: 600px; display: table-cell;">
+      <h3>Create User</h3>
+      <form action="/user/create_user" method="POST">
+        <table>
+          <tbody>
+          <tr>
+            <td>Username:</td>
+            <td><input type="text" name="user[username]" value=""/></td>
+          </tr>
+          <tr>
+            <td>Email:</td>
+            <td><input type="text" name="user[email]" value=""/></td>
+          </tr>
+          <tr>
+            <td>Password:</td>
+            <td><input type="text" name="password" value=""/></td>
+          </tr>
+          <tr>
+            <td>Admin:</td>
+            <td><input type="checkbox" name="user[admin]" value="0"/></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><input type="submit" value="Create User"></td>
+          </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
 
-<h3>Login</h3>
-<form action="/user/login" method="POST">
-  <table>
-    <tbody>
-    <tr>
-      <td>Username / Email:</td>
-      <td><input type="text" name="username_or_email" value=""/></td>
-    </tr>
-    <tr>
-      <td>Password:</td>
-      <td><input type="text" name="password" value=""/></td>
-    </tr>
-    <tr>
-      <td></td>
-      <td><input type="submit" value="Log In"></td>
-    </tr>
-    </tbody>
-  </table>
-</form>
+    <!-- Login -->
+    <div style="display: table-cell;">
+      <h3>Login</h3>
+      <form action="/user/login" method="POST">
+        <table>
+          <tbody>
+          <tr>
+            <td>Username / Email:</td>
+            <td><input type="text" name="username_or_email" value=""/></td>
+          </tr>
+          <tr>
+            <td>Password:</td>
+            <td><input type="text" name="password" value=""/></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><input type="submit" value="Log In"></td>
+          </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- TODO Remove this (or block it on non-dev running) before release -->
 <h3>All Users</h3>
@@ -83,7 +93,8 @@
     <th>Username</th>
     <th>Email</th>
     <th>Admin</th>
-    <th>Hash</th>
+    <!-- <th>Hash</th> -->
+    <th>Patch Count (All / Visible / Hidden)</th>
     <th>Actions</th>
     </thead>
     <tbody>
@@ -93,7 +104,8 @@
           <td><%= user.username %></td>
           <td><%= user.email %></td>
           <td><%= user.admin %></td>
-          <td><%= user.password_hash %></td>
+          <!-- <td><%= user.password_hash %></td> -->
+          <td><%= User.get_patch_count(user) %></td>
           <td><a href='user/delete/<%= user.id %>'>Delete</a> /
               <a href='patch/json/user/<%= user.id %>'>Patch List</a></td>
         </tr>

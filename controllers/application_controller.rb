@@ -47,26 +47,30 @@ class ApplicationController < Sinatra::Base
   end
 
   def fail_with_json_msg(code, msg)
-    response_body = {
-        'code' => code,
-        'message' => msg
-    }.to_json
-
-    # We want the HTTP request to succeed (200)
+    # We want the HTTP request to succeed so set it to 200
+    # Code will be non-200 in this case
     status 200
     content_type 'application/json'
-    body response_body
+    body get_response_body(code, msg)
   end
 
   def success_with_json_msg(msg)
-    response_body =     {
+    status 200
+    content_type 'application/json'
+    body get_response_body(200, msg)
+  end
+
+  def get_response_body(code, msg)
+    {
         'code' => 200,
         'message' => msg
     }.to_json
+  end
 
-    status 200
-    content_type 'application/json'
-    body response_body
+  # Redirects to target page setting status message to passed msg
+  def redirect_with_status_message(msg, target)
+    session[:status] = msg
+    redirect target
   end
 
   # Main index page for app will route to the patches index page at erb :index

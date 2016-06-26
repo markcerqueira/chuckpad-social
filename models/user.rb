@@ -45,4 +45,17 @@ class User < ActiveRecord::Base
     username + ' (' + id.to_s + ')'
   end
 
+  def self.get_patch_count(user)
+    all_patches = Patch.where('creator_id = ' + user.id.to_s)
+    all_count = all_patches.size
+
+    visible_patches = all_patches.where('hidden IS NOT true OR hidden IS null')
+    visible_count = visible_patches.size
+
+    hidden_patches = all_patches.where('hidden IS true')
+    hidden_count = hidden_patches.size
+
+    return all_count.to_s + ' / ' + visible_count.to_s + ' / ' + hidden_count.to_s
+  end
+
 end
