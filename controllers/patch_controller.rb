@@ -100,11 +100,9 @@ class PatchController < ApplicationController
       log(caller, 'No valid user found and fail_quietly = ' + fail_quietly.to_s)
       unless fail_quietly
         if from_native_client(request)
-          # TODO
-          fail_with_json_msg(500, 'You must be logged in to create a patch')
+          fail_with_json_msg(500, 'This call requires a logged in user')
         else
-          # TODO
-          redirect_to_index_with_status_msg('Error! You must be logged in to create a patch')
+          redirect_to_index_with_status_msg('This call requires a logged in user')
         end
       end
 
@@ -228,8 +226,7 @@ class PatchController < ApplicationController
     patches = Patch.where('creator_id = ' + params[:id].to_s)
 
     unless show_hidden
-      # TODO Once we finalize schema for 1.0 we can remove IS null
-      patches = patches.where('hidden IS NOT true OR hidden IS null')
+      patches = patches.where('hidden IS NOT true')
     end
 
     patches = patches.order('id DESC')
@@ -242,31 +239,28 @@ class PatchController < ApplicationController
     log('/new', nil)
     content_type 'text/json'
     # TODO Is there a better way to do this?
-    to_json_list(Patch.where('hidden IS NOT true OR hidden IS null').order('id DESC').limit(RECENT_PATCHES_TO_RETURN))
+    to_json_list(Patch.where('hidden IS NOT true').order('id DESC').limit(RECENT_PATCHES_TO_RETURN))
   end
 
   # Returns all patches as a JSON list
   get '/json/all/?' do
     log('/json/all', nil)
     content_type 'text/json'
-    # TODO Once we finalize schema for 1.0 we can remove IS null
-    to_json_list(Patch.where('hidden IS NOT true OR hidden IS null'))
+    to_json_list(Patch.where('hidden IS NOT true'))
   end
 
   # Returns all featured patches as a JSON list
   get '/json/featured/?' do
     log('/json/featured', nil)
     content_type 'text/json'
-    # TODO Once we finalize schema for 1.0 we can remove IS null
-    to_json_list(Patch.where('featured = true').where('hidden != false OR hidden IS null'))
+    to_json_list(Patch.where('featured = true').where('hidden != false'))
   end
 
   # Returns all documentation patches as a JSON list
   get '/json/documentation/?' do
     log('/json/documentation', nil)
     content_type 'text/json'
-    # TODO Once we finalize schema for 1.0 we can remove IS null
-    to_json_list(Patch.where('documentation = true').where('hidden != false OR hidden IS null'))
+    to_json_list(Patch.where('documentation = true').where('hidden != false'))
   end
 
   # Downloads patch file for given patch id
@@ -308,12 +302,7 @@ class PatchController < ApplicationController
       return
     end
 
-    # TODO We can simplify this once we wipe DB once
-    if patch.hidden
-      patch.hidden = false
-    else
-      patch.hidden = true
-    end
+    patch.hidden = !patch.hidden
 
     patch.save
 
