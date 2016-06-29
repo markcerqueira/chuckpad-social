@@ -140,7 +140,7 @@ class PatchController < ApplicationController
   get '/' do
     log('/', nil)
     @latest_status_message = session[:status]
-    @patches = Patch.find(:all, :order  => 'id DESC')
+    @patches = Patch.order(id: :desc).all
     @logged_in_user = User.get_user(session[:user_id], nil, nil)
     erb :index
   end
@@ -223,13 +223,13 @@ class PatchController < ApplicationController
       show_hidden = current_user.id.to_i == params[:id].to_i
     end
 
-    patches = Patch.where('creator_id = ' + params[:id].to_s)
+    patches = Patch.where(creator_id: params[:id])
 
     unless show_hidden
-      patches = patches.where('hidden IS NOT true')
+      patches.visible
     end
 
-    patches = patches.order('id DESC')
+    patches = patches.order(id: :desc)
 
     to_json_list(patches)
   end
@@ -239,28 +239,28 @@ class PatchController < ApplicationController
     log('/new', nil)
     content_type 'text/json'
     # TODO Is there a better way to do this?
-    to_json_list(Patch.where('hidden IS NOT true').order('id DESC').limit(RECENT_PATCHES_TO_RETURN))
+    to_json_list(Patch.visible.order(id: :desc)).limit(RECENT_PATCHES_TO_RETURN)
   end
 
   # Returns all patches as a JSON list
   get '/json/all/?' do
     log('/json/all', nil)
     content_type 'text/json'
-    to_json_list(Patch.where('hidden IS NOT true'))
+    to_json_list(Patch.visible)
   end
 
   # Returns all featured patches as a JSON list
   get '/json/featured/?' do
     log('/json/featured', nil)
     content_type 'text/json'
-    to_json_list(Patch.where('featured = true').where('hidden != false'))
+    to_json_list(Patch.hidden_featured)
   end
 
   # Returns all documentation patches as a JSON list
   get '/json/documentation/?' do
     log('/json/documentation', nil)
     content_type 'text/json'
-    to_json_list(Patch.where('documentation = true').where('hidden != false'))
+    to_json_list(Patch.hidden_documentation)
   end
 
   # Downloads patch file for given patch id
