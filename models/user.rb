@@ -5,28 +5,7 @@ class User < ActiveRecord::Base
   # they will search in order declared (e.g. search by id first, username
   # second, email third).
   def self.get_user(id, username, email)
-    unless id.nil?
-      user = User.find_by_id(id)
-      if !user.nil?
-        return user
-      end
-    end
-
-    unless username.nil?
-      user = User.find_by_username(username)
-      if !user.nil?
-        return user
-      end
-    end
-
-    unless email.nil?
-      user = User.find_by_email(email)
-      if !user.nil?
-        return user
-      end
-    end
-
-    return nil
+    User.find_by_id(id) || User.find_by_username(username) || User.find_by_email(email)
   end
 
   # Finds user by username or email (using logic in get_user function) and
@@ -42,20 +21,17 @@ class User < ActiveRecord::Base
   end
 
   def display_str
-    username + ' (' + id.to_s + ')'
+    "#{username} (#{id})"
   end
 
-  def self.get_patch_count(user)
-    all_patches = Patch.where('creator_id = ' + user.id.to_s)
-    all_count = all_patches.size
+  def get_patch_count
+    all_patches = patches
 
-    visible_patches = all_patches.where('hidden IS NOT true OR hidden IS null')
-    visible_count = visible_patches.size
+    all_count     = all_patches.count
+    visible_count = all_patches.visible.count
+    hidden_count  = all_count - visible_count
 
-    hidden_patches = all_patches.where('hidden IS true')
-    hidden_count = hidden_patches.size
-
-    return all_count.to_s + ' / ' + visible_count.to_s + ' / ' + hidden_count.to_s
+    "#{all_count}/#{visible_count}/#{hidden_count}"
   end
 
 end
