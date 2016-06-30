@@ -2,7 +2,7 @@ class Patch < ActiveRecord::Base
   belongs_to :creator, class_name: 'User'
 
   scope :hidden, -> { where(hidden: true) }
-  scope :visible, -> { where.not(hidden: true) }
+  scope :visible, -> { where(hidden: false) }
 
   scope :documentation, -> { where(documentation: true) }
   scope :visible_documentation, -> { self.documentation.visible }

@@ -140,7 +140,7 @@ class PatchController < ApplicationController
   get '/' do
     log('/', nil)
     @latest_status_message = session[:status]
-    @patches = Patch.order(id: :desc).all
+    @patches = Patch.order('id DESC').all
     @logged_in_user = User.get_user(session[:user_id], nil, nil)
     erb :index
   end
@@ -229,7 +229,7 @@ class PatchController < ApplicationController
       patches.visible
     end
 
-    patches = patches.order(id: :desc)
+    patches = patches.order('id DESC')
 
     to_json_list(patches)
   end
@@ -239,7 +239,7 @@ class PatchController < ApplicationController
     log('/new', nil)
     content_type 'text/json'
     # TODO Is there a better way to do this?
-    to_json_list(Patch.visible.order(id: :desc)).limit(RECENT_PATCHES_TO_RETURN)
+    to_json_list(Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN))
   end
 
   # Returns all patches as a JSON list

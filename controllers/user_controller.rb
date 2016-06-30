@@ -10,7 +10,7 @@ class UserController < ApplicationController
 
   # Index page that loads user.erb
   get '/' do
-    @users                 = User.order(id: :desc).all
+    @users                 = User.order('id DESC').all
     @logged_in_user        = User.get_user(session[:user_id], nil, nil)
     @latest_status_message = session[:status]
     erb :user
