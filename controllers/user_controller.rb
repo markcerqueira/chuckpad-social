@@ -10,8 +10,8 @@ class UserController < ApplicationController
 
   # Index page that loads user.erb
   get '/' do
-    @users = User.find(:all, :order  => 'id DESC')
-    @logged_in_user = User.get_user(session[:user_id], nil, nil)
+    @users                 = User.order('id DESC').all
+    @logged_in_user        = User.get_user(session[:user_id], nil, nil)
     @latest_status_message = session[:status]
     erb :user
   end
@@ -38,7 +38,7 @@ class UserController < ApplicationController
 
     existing_user = User.get_user(nil, username, email)
 
-    if !existing_user.nil?
+    unless existing_user.nil?
       log('create_user', 'user already exists')
 
       if from_native_client(request)
@@ -48,7 +48,7 @@ class UserController < ApplicationController
         redirect_to_index_with_status_msg('Unable to create user because user already exists')
       end
     end
-    
+
     user = User.new do |u|
       u.username = username
       u.email = email
