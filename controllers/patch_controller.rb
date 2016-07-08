@@ -13,33 +13,6 @@ class PatchController < ApplicationController
     shared_log('PatchController', method, o)
   end
 
-  # Returns passed patch object as a hash
-  def to_hash(patch)
-    {
-        'id' => patch.id,
-        'name' => patch.name,
-        'featured' => patch.featured,
-        'documentation' => patch.documentation,
-        # TODO This can be removed at some point since hidden things should not be seen externally
-        'hidden' => patch.hidden,
-        'filename' => patch.filename,
-        'content_type' => patch.content_type,
-        'creator_id' => patch.creator_id,
-        'resource' => '/patch/show/' + patch.id.to_s
-    }
-  end
-
-  # Converts passed patch as a JSON object
-  def to_json(patch)
-    to_hash(patch).to_json
-  end
-
-  # Converts passed list patches as a JSON list
-  def to_json_list(patches)
-    # TODO models.to_json(only: [:id, :name])
-    return patches.each_with_object([]) { |patch, array| array << to_hash(patch) }.to_json
-  end
-
   # Redirects to '/patch' with message
   def redirect_to_index_with_status_msg(msg)
     redirect_with_status_message(msg, '/patch')
@@ -207,7 +180,18 @@ class PatchController < ApplicationController
       return
     end
 
-    to_json(patch)
+    patch.to_json
+  end
+
+  # Returns patches for the logged in user in JSON format
+  get '/my/?' do
+    current_user, error = get_user('/my', request, params, false)
+    if error
+      log('/my', 'get_user call had an error')
+      return
+    end
+
+    Patch.where(creator_id: current_user.id).to_json
   end
 
   # Returns patches for the given user in JSON format
@@ -229,38 +213,35 @@ class PatchController < ApplicationController
       patches.visible
     end
 
-    patches = patches.order('id DESC')
-
-    to_json_list(patches)
+    patches.order('id DESC').to_json
   end
 
   # Returns recently created patches
   get '/new/?' do
     log('/new', nil)
     content_type 'text/json'
-    # TODO Is there a better way to do this?
-    to_json_list(Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN))
+    Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json
   end
 
-  # Returns all patches as a JSON list
+  # Returns all (non-hidden) patches as a JSON list
   get '/json/all/?' do
     log('/json/all', nil)
     content_type 'text/json'
-    to_json_list(Patch.visible)
+    Patch.visible.to_json
   end
 
-  # Returns all featured patches as a JSON list
+  # Returns all (non-hidden) featured patches as a JSON list
   get '/json/featured/?' do
     log('/json/featured', nil)
     content_type 'text/json'
-    to_json_list(Patch.hidden_featured)
+    Patch.visible_featured.to_json
   end
 
-  # Returns all documentation patches as a JSON list
+  # Returns all (non-hidden) documentation patches as a JSON list
   get '/json/documentation/?' do
     log('/json/documentation', nil)
     content_type 'text/json'
-    to_json_list(Patch.hidden_documentation)
+    Patch.visible_documentation.to_json
   end
 
   # Downloads patch file for given patch id
