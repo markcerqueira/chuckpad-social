@@ -78,9 +78,23 @@ class ApplicationController < Sinatra::Base
     redirect '/patch'
   end
 
+  # A certain reviewer of an app that may be using this API may not like it if the app could download and execute code.
+  # If this API does not return true, clients should NOT attempt to make any other API requests.
+  get '/enabled/?' do
+    # Update this to include all versions of the app that are released but NOT in review!
+    supported_lib_versions = ['0.1']
+
+    if from_native_client(request)
+      enabled = supported_lib_versions.include? params[:version]
+    else
+      enabled = true
+    end
+
+    enabled ? success_with_json_msg('') : fail_with_json_msg(500, '')
+  end
+
   after do
-    # Close the connection after the request is done so that we don't
-    # deplete the ActiveRecord connection pool.
+    # Close the connection after the request is done so that we don't deplete the ActiveRecord connection pool.
     ActiveRecord::Base.connection.close
   end
 

@@ -12,11 +12,12 @@ class Patch < ActiveRecord::Base
   scope :visible_featured, -> { self.featured.visible }
   scope :hidden_featured, -> { self.featured.hidden }
 
-  # Returns patch object as a hash
+  # Converts patch to json using to_hash method
   def as_json(options)
     to_hash()
   end
 
+  # Returns patch object as a hash
   def to_hash()
     {
         'id' => id,
