@@ -15,6 +15,8 @@ GEM
     arel (3.0.2)
     bcrypt (3.1.11)
     builder (3.0.4)
+    email_validator (1.6.0)
+      activemodel
     ffi (1.9.10)
     i18n (0.6.1)
     json (1.8.3)
@@ -54,6 +56,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord
   bcrypt (~> 3.1.11)
+  email_validator
   json (~> 1.8.3)
   minitest
   pg (~> 0.15)

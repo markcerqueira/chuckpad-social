@@ -62,7 +62,7 @@ class UserController < ApplicationController
 
     existing_user = User.get_user(nil, username, email)
     unless existing_user.nil?
-      log('create_user', 'user already exists')
+      log('create_user', 'user already exists for username = ' + username + "; email = " + email)
 
       if from_native_client(request)
         fail_with_json_msg(500, 'Unable to create user because user already exists')
@@ -93,6 +93,17 @@ class UserController < ApplicationController
         return
       else
         redirect_to_index_with_status_msg('The password is too weak')
+      end
+    end
+
+    # Validate email address
+    unless EmailValidator.valid?(email)
+      log('create_user', 'email is valid')
+      if from_native_client(request)
+        fail_with_json_msg(500, 'Please enter a valid email')
+        return
+      else
+        redirect_to_index_with_status_msg('Please enter a valid email')
       end
     end
 

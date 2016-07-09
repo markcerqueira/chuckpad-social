@@ -3,6 +3,7 @@ require 'sinatra/base'
 
 require 'active_record'
 require 'bcrypt'
+require 'email_validator'
 require 'json'
 require 'strong_password'
 
