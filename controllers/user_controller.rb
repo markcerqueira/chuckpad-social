@@ -1,7 +1,8 @@
 require './controllers/application_controller'
-require 'bcrypt'
 
 class UserController < ApplicationController
+
+  MIN_PASSWORD_ENTROPY = 6
 
   # Helper logging method
   def log(method, o)
@@ -29,15 +30,37 @@ class UserController < ApplicationController
     redirect '/user'
   end
 
+  # Simple password checker to make sure password is not equal to username and not weak
+  def is_password_weak(caller, username, password)
+    if password.nil? or password.length == 0
+      log(caller, 'password is empty')
+      return true
+    end
+
+    if !username.nil? and password.eql? username
+      log(caller, 'password is the same as username')
+      return true
+    end
+
+    password_entropy = StrongPassword::StrengthChecker.new(password).calculate_entropy
+    log(caller, 'password.length = ' + password.length.to_s + '; password_entropy = '+  password_entropy.to_s)
+    return password_entropy.to_i < MIN_PASSWORD_ENTROPY
+  end
+
   # Creates a new user
   post '/create_user/?' do
     username = params[:user][:username]
+    username.strip
+
     email = params[:user][:email]
+    email.strip
+
     password = params[:password]
+    password.strip
+
     admin = params[:user].has_key?('admin')
 
     existing_user = User.get_user(nil, username, email)
-
     unless existing_user.nil?
       log('create_user', 'user already exists')
 
@@ -46,6 +69,30 @@ class UserController < ApplicationController
         return
       else
         redirect_to_index_with_status_msg('Unable to create user because user already exists')
+      end
+    end
+
+    # No user found so we can validate inputs and create a user
+
+    # Check for username, password, and email being present
+    if username.blank? or password.blank? or email.blank?
+      log('create_user', 'one or more params are empty')
+      if from_native_client(request)
+        fail_with_json_msg(500, 'Username, password, and email are all required')
+        return
+      else
+        redirect_to_index_with_status_msg('Username, password, and email are all required')
+      end
+    end
+
+    # Check password strength
+    if is_password_weak('create_user', username, password)
+      log('create_user', 'password is weak')
+      if from_native_client(request)
+        fail_with_json_msg(500, 'The password is too weak')
+        return
+      else
+        redirect_to_index_with_status_msg('The password is too weak')
       end
     end
 
@@ -67,15 +114,11 @@ class UserController < ApplicationController
   end
 
   post '/change_password/?' do
-    logged_in_user = nil;
-
     if from_native_client(request)
       logged_in_user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
     else
       logged_in_user = User.get_user(session[:user_id], nil, nil)
     end
-
-    # TODO Check password length
 
     if logged_in_user.nil?
       log('change_password', 'No user found')
@@ -87,8 +130,21 @@ class UserController < ApplicationController
       end
     end
 
+    password = params[:password]
+    password.strip!
+
+    if is_password_weak('change_password', nil, password)
+      log('change_password', 'password is weak')
+      if from_native_client(request)
+        fail_with_json_msg(500, 'The password is too weak')
+        return
+      else
+        redirect_to_index_with_status_msg('The password is too weak')
+      end
+    end
+
     logged_in_user.salt = BCrypt::Engine.generate_salt
-    logged_in_user.password_hash = BCrypt::Engine.hash_secret(params[:password], logged_in_user.salt)
+    logged_in_user.password_hash = BCrypt::Engine.hash_secret(password, logged_in_user.salt)
 
     logged_in_user.save
 
@@ -130,9 +186,6 @@ class UserController < ApplicationController
   # Logs in as a user
   post '/login/?' do
     user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
-
-    error = false
-    error_message = nil
 
     if user.nil?
       log('/login', 'Login failed; no user found')

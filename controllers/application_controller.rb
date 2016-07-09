@@ -2,7 +2,9 @@ require 'sinatra'
 require 'sinatra/base'
 
 require 'active_record'
+require 'bcrypt'
 require 'json'
+require 'strong_password'
 
 require './models/patch'
 require './models/user'
