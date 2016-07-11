@@ -26,6 +26,7 @@ Improvements are appreciated and always welcome! If you'd like to work on featur
 * Set environmental variable RACK_COOKIE_SECRET on Heroku
 * Add [SPF record][7] to avoid Gmail's "message is authenticated" warning
 * Publish config/env.rb to Heroku with `rake config_env:heroku[chuckpad-social]`
+* To get git to stop complaining about env.rb if you change it: `git update-index --assume-unchanged config/env.rb`. We are tracking an "empty" version of env.rb so gitignore will sometimes not ignore this file until you tell it to assume its unchanged.
 
 ### Links and Resources
 * https://www.sitepoint.com/rails-userpassword-authentication-from-scratch-part-i/
@@ -34,6 +35,8 @@ Improvements are appreciated and always welcome! If you'd like to work on featur
 * https://www.sitepoint.com/build-a-sinatra-mvc-framework/
 * http://www.sinatrarb.com/intro.html
 * https://html5boilerplate.com/
+* https://github.com/SergXIIIth/config_env
+* https://github.com/mikel/mail
 
 [1]: http://postgresapp.com/
 [2]: http://chuckpad-social.herokuapp.com/
