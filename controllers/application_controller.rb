@@ -5,14 +5,51 @@ require 'active_record'
 require 'bcrypt'
 require 'email_validator'
 require 'json'
+require 'mail'
 require 'strong_password'
 
 require './models/patch'
 require './models/user'
 
+module MailHelper
+
+  # Helper method to send someone an email
+  def self.send_email(to_field, subject_text, body_text)
+    mail = Mail.new do
+      to to_field
+      from ENV['EMAIL_FROM_EMAIL'].to_s
+      subject subject_text
+      body body_text
+    end
+    mail.deliver!
+  end
+
+end
+
 class ApplicationController < Sinatra::Base
 
   CHUCKPAD_SOCIAL_IOS = 'chuckpad-social-ios'
+
+  helpers MailHelper
+
+  # Configure mail gem
+  options = { :address              => ENV['EMAIL_MAIL_SERVER'].to_s,
+              :port                 => 587,
+              :user_name            => ENV['EMAIL_USER_NAME'].to_s,
+              :password             => ENV['EMAIL_PASSWORD'].to_s,
+              :authentication       => 'plain',
+              :enable_starttls_auto => true,
+              :openssl_verify_mode  => OpenSSL::SSL::VERIFY_NONE }
+
+  Mail.defaults do
+    delivery_method :smtp, options
+  end
+
+  # Tell Sinatra about special MIME types
+  # http://stackoverflow.com/a/18574464/265791
+  configure do
+    mime_type :ck, 'text/ck'
+  end
 
   # http://stackoverflow.com/a/13696534/265791
   # sets root as the parent-directory of the current file
@@ -21,19 +58,13 @@ class ApplicationController < Sinatra::Base
   # sets the view directory correctly
   set :views, Proc.new { File.join(root, 'views') }
 
-  # Tell Sinatra about special MIME types
-  # http://stackoverflow.com/a/18574464/265791
-  configure do
-    mime_type :ck, 'text/ck'
-  end
-
   # Configure Rack session cookies which is used by the web to persist a
   # session across various routes
   use Rack::Session::Cookie,
       :key => 'rack.session',
       :path => '/',
       :expire_after => 2592000, # 30 days in seconds
-      :secret => (ENV['RACK_COOKIE_SECRET'] || 'ooY74TAY34UZqYguck4p').to_s
+      :secret => ENV['RACK_COOKIE_SECRET'].to_s
 
   # Shared logging function for standardized logging to the console
   def shared_log(controller, method, o)

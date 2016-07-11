@@ -24,6 +24,8 @@ Improvements are appreciated and always welcome! If you'd like to work on featur
 
 ### README TODOs
 * Set environmental variable RACK_COOKIE_SECRET on Heroku
+* Add [SPF record][7] to avoid Gmail's "message is authenticated" warning
+* Publish config/env.rb to Heroku with `rake config_env:heroku[chuckpad-social]`
 
 ### Links and Resources
 * https://www.sitepoint.com/rails-userpassword-authentication-from-scratch-part-i/
@@ -39,3 +41,4 @@ Improvements are appreciated and always welcome! If you'd like to work on featur
 [4]: https://www.postgresql.org/download/
 [5]: https://app.asana.com/-/share?s=147252256199690-lWxuO8hBjVq7jOGkmVlwpUpsPfvH9ekYGQToiw1dMUP-868703070985
 [6]: https://github.com/markcerqueira/chuckpad-social-ios
+[7]: https://help.dreamhost.com/hc/en-us/articles/220854287-What-SPF-records-do-I-use-

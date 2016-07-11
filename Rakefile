@@ -7,6 +7,9 @@ require './config/environments' # database configuration
 
 require 'rake/testtask'
 
+require 'config_env/rake_tasks'
+ConfigEnv.init("#{__dir__}/config/env.rb")
+
 Rake::TestTask.new do |t|
   t.pattern = 'tests/*_test.rb'
 end
