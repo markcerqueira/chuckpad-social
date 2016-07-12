@@ -150,6 +150,7 @@ class PatchController < ApplicationController
       p.filename = params[:patch][:data][:filename]
       p.content_type = params[:patch][:data][:type]
       p.creator_id = current_user.id
+      p.revision = 1
       if p.name.nil? or p.name.empty?
         p.name = p.filename
       end
@@ -170,6 +171,42 @@ class PatchController < ApplicationController
         redirect_to_index_with_status_msg('There was an error saving the patch')
       end
     end
+  end
+
+  # Updates an existing patch. Supports updating file and name of the patch. Revision is
+  # incremented when an update occurs.
+  post '/update/?' do
+    log('update', nil)
+
+    params[:id] = params[:patch][:id]
+
+    patch, error = get_user_authenticated_and_modifiable_patch('/update', request, params)
+    if error
+      log('/toggle_hidden', 'get_user_authenticated_and_modifiable_patch call had an error')
+      return
+    end
+
+    data = params[:patch][:data]
+    unless data.nil?
+      patch.data = params[:patch][:data][:tempfile].read
+      patch.filename = params[:patch][:data][:filename]
+      patch.content_type = params[:patch][:data][:type]
+      revision_made = true
+    end
+
+    name = params[:patch][:name]
+    unless name.nil? or name.empty?
+      patch.name = name
+      revision_made = true
+    end
+
+    if revision_made
+      patch.revision = patch.revision + 1
+      patch.save
+    end
+
+    # TODO Switch on if a change was made?
+    redirect_to_index_with_status_msg('Updated patch with id ' + params[:id].to_s)
   end
 
   # Returns information for patch with parameter id in JSON format

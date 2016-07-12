@@ -18,37 +18,71 @@
     <h3>You are not logged in. Go to the <a href="/user">/user</a> page to log in.</h3>
 <% end %>
 
-<h3>Upload a new patch:</h3>
-<form action="/patch/create_patch" method="POST" enctype="multipart/form-data">
-  <table>
-    <tbody>
-        <tr>
-          <td>Patch Name (if blank upload filename will be used)</td>
-          <td><input type="text" name="patch[name]" value=""/></td>
-        </tr>
-        <tr>
-          <td>Featured</td>
-          <td><input type="checkbox" name="patch[featured]" value="0"/></td>
-        </tr>
-        <tr>
-          <td>Documentation</td>
-          <td><input type="checkbox" name="patch[documentation]" value="0"/></td>
-        </tr>
-        <tr>
-          <td>Hidden</td>
-          <td><input type="checkbox" name="patch[hidden]" value="0"/></td>
-        </tr>
-        <tr>
-          <td>File (10 KB max) to upload</td>
-          <td><input type="file" name="patch[data]"></td>
-        </tr>
-        <tr>
-          <td></td>
-          <td><input type="submit" value="Create Patch"></td>
-        </tr>
-    </tbody>
-  </table>
-</form>
+<div style="width: 100%; display: table;">
+  <div style="display: table-row">
+    <!-- Create Patch -->
+    <div style="width: 600px; display: table-cell; padding-right: 2em;">
+      <h3>Upload a new patch:</h3>
+      <form action="/patch/create_patch" method="POST" enctype="multipart/form-data">
+        <table>
+          <tbody>
+          <tr>
+            <td>Patch Name (if blank upload filename will be used)</td>
+            <td><input type="text" name="patch[name]" value=""/></td>
+          </tr>
+          <tr>
+            <td>Featured</td>
+            <td><input type="checkbox" name="patch[featured]" value="0"/></td>
+          </tr>
+          <tr>
+            <td>Documentation</td>
+            <td><input type="checkbox" name="patch[documentation]" value="0"/></td>
+          </tr>
+          <tr>
+            <td>Hidden</td>
+            <td><input type="checkbox" name="patch[hidden]" value="0"/></td>
+          </tr>
+          <tr>
+            <td>File (10 KB max) to upload</td>
+            <td><input type="file" name="patch[data]"></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><input type="submit" value="Create Patch"></td>
+          </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+
+    <!-- Update Patch -->
+    <div style="display: table-cell;">
+      <h3>Update a patch:</h3>
+      <form action="/patch/update" method="POST" enctype="multipart/form-data">
+        <table>
+          <tbody>
+          <tr>
+            <td>Patch Id</td>
+            <td><input type="text" name="patch[id]" value=""/></td>
+          </tr>
+          <tr>
+            <td>Patch Name (if blank upload filename will be used)</td>
+            <td><input type="text" name="patch[name]" value=""/></td>
+          </tr>
+          <tr>
+            <td>File (10 KB max) to upload</td>
+            <td><input type="file" name="patch[data]"></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td><input type="submit" value="Update Patch"></td>
+          </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+</div>
 
 <h3>API - best viewed using <a href="https://chrome.google.com/webstore/detail/jsonview/chklaanhfefbnpoihckbnefhakgolnmc">JSONView extension</a></h3>
 <ul>
@@ -70,6 +104,7 @@
     <th>Featured</th>
     <th>Documentation</th>
     <th>Hidden</th>
+    <th>Revision</th>
     <th>Filename</th>
     <th>Content Type</th>
     <th>Creator</th>
@@ -83,6 +118,7 @@
           <td><%= patch.featured %></td>
           <td><%= patch.documentation %></td>
           <td><%= patch.hidden %></td>
+          <td><%= patch.revision %></td>
           <td><%= patch.filename %></td>
           <td><%= patch.content_type %></td>
           <td><%= patch.creator_display_str %></td>
