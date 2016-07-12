@@ -14,12 +14,16 @@ require './models/user'
 module MailHelper
 
   # Helper method to send someone an email
-  def self.send_email(to_field, subject_text, body_text)
+  def self.send_email(to_field, subject_text, html_body_text)
     mail = Mail.new do
       to to_field
       from ENV['EMAIL_FROM_EMAIL'].to_s
       subject subject_text
-      body body_text
+      # body body_text
+      html_part do
+        content_type 'text/html; charset=UTF-8'
+        body html_body_text
+      end
     end
     mail.deliver!
   end

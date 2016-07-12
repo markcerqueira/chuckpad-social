@@ -3,9 +3,9 @@ class User < ActiveRecord::Base
 
   # Find a user by id, username, or email. If multiple params are passed
   # they will search in order declared (e.g. search by id first, username
-  # second, email third).
-  def self.get_user(id, username = nil, email = nil)
-    User.find_by_id(id) || User.find_by_username(username) || User.find_by_email(email)
+  # second, email third, confirm_token fourth).
+  def self.get_user(id, username = nil, email = nil, confirm_token = nil)
+    User.find_by_id(id) || User.find_by_username(username) || User.find_by_email(email) || User.find_by_confirm_token(confirm_token)
   end
 
   # Finds user by username or email (using logic in get_user function) and

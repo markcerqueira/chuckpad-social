@@ -37,6 +37,7 @@ Improvements are appreciated and always welcome! If you'd like to work on featur
 * https://html5boilerplate.com/
 * https://github.com/SergXIIIth/config_env
 * https://github.com/mikel/mail
+* https://coderwall.com/p/u56rra/ruby-on-rails-user-signup-email-confirmation-tutorial
 
 [1]: http://postgresapp.com/
 [2]: http://chuckpad-social.herokuapp.com/

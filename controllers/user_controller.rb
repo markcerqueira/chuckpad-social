@@ -47,6 +47,43 @@ class UserController < ApplicationController
     return password_entropy.to_i < MIN_PASSWORD_ENTROPY
   end
 
+  # Sends confirmation email to user passed in
+  # Confirmation email is HTML-based and is pulled from the views/welcome_email.erb file
+  def send_confirmation_email(user, request)
+    if user.nil?
+      log('send_confirmation_email', 'user is nil')
+      return
+    end
+
+    subject = 'Welcome to ChuckPad!'
+    html_body = erb :welcome_email, locals: { username: user.username, confirm_link: request.base_url.to_s + '/user/confirm/' + user.confirm_token }
+
+    MailHelper.send_email(user.email, subject, html_body)
+  end
+
+  # Sends confirmation email for the currently logged in user. Will NOT send an email if the user has already confirmed
+  # their email.
+  get '/confirm_email/?' do
+    if from_native_client(request)
+      logged_in_user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
+    else
+      logged_in_user = User.get_user(session[:user_id], nil, nil)
+    end
+
+    if logged_in_user.nil?
+      log('confirm_email', 'No logged in user found')
+      redirect_to_index_with_status_msg('Unable to send confirmation email until a user logs in')
+    end
+
+    if logged_in_user.email_confirmed
+      log('confirm_email', 'User has already confirmed email')
+      redirect_to_index_with_status_msg('User has already confirmed email so not sending another email')
+    end
+
+    send_confirmation_email(logged_in_user, request)
+    redirect_to_index_with_status_msg('Confirmation email sent to ' + logged_in_user.email)
+  end
+
   # Creates a new user
   post '/create_user/?' do
     username = params[:user][:username]
@@ -62,7 +99,7 @@ class UserController < ApplicationController
 
     existing_user = User.get_user(nil, username, email)
     unless existing_user.nil?
-      log('create_user', 'user already exists for username = ' + username + "; email = " + email)
+      log('create_user', 'user already exists for username = ' + username + '; email = ' + email)
 
       if from_native_client(request)
         fail_with_json_msg(500, 'Unable to create user because user already exists')
@@ -113,15 +150,42 @@ class UserController < ApplicationController
       u.admin = admin
       u.salt = BCrypt::Engine.generate_salt
       u.password_hash = BCrypt::Engine.hash_secret(password, u.salt)
+      u.email_confirmed = false
+      u.confirm_token = SecureRandom.urlsafe_base64.to_s
     end
 
     user.save
 
+    send_confirmation_email(user, request)
+
     if from_native_client(request)
-      success_with_json_msg('User created with id ' + user.id.to_s)
+      success_with_json_msg('User created with id ' + user.id.to_s + '. Confirmation email sent to ' + user.email.to_s)
     else
       redirect_to_index_with_status_msg('User created with id ' + user.id.to_s)
     end
+  end
+
+  # Given token passed in url, finds the associated user and flags their email as confirmed
+  # NOTE: This is a web-only API and should not be called from native clients
+  get '/confirm/:token/?' do
+    token = params[:token].to_s
+
+    if token.nil? or token.empty?
+      log('confirm/:token/', 'token is nil or empty')
+      return
+    end
+
+    user = User.get_user(nil, nil, nil, token)
+
+    if user.nil?
+      log('confirm/:token/', 'Could not find user for confirm token')
+      redirect_to_index_with_status_msg('Unable to find a user with confirm token = ' + token)
+    end
+
+    user.email_confirmed = true
+    user.save
+
+    redirect_to_index_with_status_msg('Email confirmed for user ' + user.username)
   end
 
   post '/change_password/?' do
