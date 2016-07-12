@@ -59,6 +59,8 @@ class UserController < ApplicationController
     html_body = erb :welcome_email, locals: { username: user.username, confirm_link: request.base_url.to_s + '/user/confirm/' + user.confirm_token }
 
     MailHelper.send_email(user.email, subject, html_body)
+
+    log('send_confirmation_email', 'Confirmation email sent to ' + user.email)
   end
 
   # Sends confirmation email for the currently logged in user. Will NOT send an email if the user has already confirmed
