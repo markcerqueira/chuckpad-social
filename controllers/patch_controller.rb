@@ -60,7 +60,7 @@ class PatchController < ApplicationController
   end
 
   # Gets user supporting both web and iOS-based queries
-  def self.get_user(caller, request, params, fail_quietly = false)
+  def get_user_from_params(caller, request, params, fail_quietly = false)
     if from_native_client(request)
       # Native clients: this will return nil if we cannot find the user OR the password is incorrect
       current_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
@@ -95,7 +95,7 @@ class PatchController < ApplicationController
       return nil, true
     end
 
-    current_user, error = get_user(caller, request, params, fail_quietly)
+    current_user, error = get_user_from_params(caller, request, params, fail_quietly)
     if error
       log(caller, 'get_user call had an error')
       return nil, true
@@ -123,7 +123,7 @@ class PatchController < ApplicationController
     log('/create_patch', params)
 
     # User must be logged in to create a patch
-    current_user, error = self.get_user('/create_patch', request, params)
+    current_user, error = get_user_from_params('/create_patch', request, params)
     if error
       log('/create_patch', 'get_user call had an error')
       return
@@ -222,7 +222,7 @@ class PatchController < ApplicationController
 
   # Returns patches for the logged in user in JSON format
   get '/my/?' do
-    current_user, error = self.get_user('/my', request, params, false)
+    current_user, error = get_user_from_params('/my', request, params, false)
     if error
       log('/my', 'get_user call had an error')
       return
@@ -239,7 +239,7 @@ class PatchController < ApplicationController
     content_type 'text/json'
 
     show_hidden = false
-    current_user, error = self.get_user('/json/user', request, params, true)
+    current_user, error = get_user_from_params('/json/user', request, params, true)
     unless current_user.nil?
       show_hidden = current_user.id.to_i == params[:id].to_i
     end

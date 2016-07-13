@@ -177,7 +177,7 @@ class UserController < ApplicationController
       return
     end
 
-    user = User.get_user(nil, nil, nil, token)
+    user = User.get_user_with_confirm_token(token)
 
     if user.nil?
       log('confirm/:token/', 'Could not find user for confirm token')
