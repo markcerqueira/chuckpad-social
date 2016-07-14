@@ -6,7 +6,7 @@
 
 ### What is chuckpad-social?
 
-chuckpad-social is an upload-download service for ChucK patches. Designed to help people learn more about ChucK through examples and encourage people to build and share their own creations. Visit [chuckpad-social on Heroku][2]. chuckpad-social has an [iOS library][6] that wraps its API. chuckpad-social is built using lots of stuff including Sinatra, ActiveRecord, and Postgres. 
+chuckpad-social is an upload-download service for ChucK patches. Designed to help people learn more about ChucK through examples and encourage people to build and share their own creations with the world. Visit [chuckpad-social on Heroku][2]. chuckpad-social has an [iOS library][6] that wraps its API. chuckpad-social is built using lots of stuff including Sinatra, ActiveRecord, Postgres, and lots of gems developed by the vibrant Ruby community. 
 
 ### Setup
 * Install RVM: `\curl -sSL https://get.rvm.io | bash`
@@ -20,7 +20,7 @@ chuckpad-social is an upload-download service for ChucK patches. Designed to hel
 
 
 ### Contribute
-Improvements are appreciated and always welcome! If you'd like to work on features on the roadmap, feel free to view our [project task page on Asana][5] (you'll need to log into your Asana account). 
+Improvements are appreciated and always welcome! If you'd like to work on features on the roadmap, feel free to view our [project task page on Asana][5]. You'll need to log into your Asana account.
 
 ### README TODOs
 * Set environmental variable RACK_COOKIE_SECRET on Heroku
