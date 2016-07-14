@@ -28,7 +28,7 @@ class Patch < ActiveRecord::Base
         'filename' => filename,
         'content_type' => content_type,
         'creator_id' => creator_id,
-        'creator_username' => User.get_user(creator_id).username,
+        'creator_username' => User.get_user(id: creator_id).username,
         'resource' => '/patch/show/' + id.to_s
     }
   end

@@ -11,8 +11,8 @@ class UserController < ApplicationController
 
   # Index page that loads user.erb
   get '/' do
-    @users                 = User.order('id DESC').all
-    @logged_in_user        = User.get_user(session[:user_id], nil, nil)
+    @users = User.order('id DESC').all
+    @logged_in_user = User.get_user(id: session[:user_id])
     @latest_status_message = session[:status]
     erb :user
   end
@@ -67,9 +67,9 @@ class UserController < ApplicationController
   # their email.
   get '/confirm_email/?' do
     if from_native_client(request)
-      logged_in_user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
+      logged_in_user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
     else
-      logged_in_user = User.get_user(session[:user_id], nil, nil)
+      logged_in_user = User.get_user(id: session[:user_id])
     end
 
     if logged_in_user.nil?
@@ -99,7 +99,7 @@ class UserController < ApplicationController
 
     admin = params[:user].has_key?('admin')
 
-    existing_user = User.get_user(nil, username, email)
+    existing_user = User.get_user(username: username, email: email)
     unless existing_user.nil?
       log('create_user', 'user already exists for username = ' + username + '; email = ' + email)
 
@@ -177,7 +177,7 @@ class UserController < ApplicationController
       return
     end
 
-    user = User.get_user_with_confirm_token(token)
+    user = User.get_user(confirm_token: token)
 
     if user.nil?
       log('confirm/:token/', 'Could not find user for confirm token')
@@ -192,9 +192,9 @@ class UserController < ApplicationController
 
   post '/change_password/?' do
     if from_native_client(request)
-      logged_in_user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
+      logged_in_user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
     else
-      logged_in_user = User.get_user(session[:user_id], nil, nil)
+      logged_in_user = User.get_user(id: session[:user_id])
     end
 
     if logged_in_user.nil?
@@ -236,7 +236,7 @@ class UserController < ApplicationController
   get '/delete/:id/?' do
     log('delete', params)
 
-    user = User.get_user(params[:id], nil, nil)
+    user = User.get_user(id: params[:id])
 
     if user.nil?
       log('delete', 'No user found')
@@ -262,7 +262,7 @@ class UserController < ApplicationController
 
   # Logs in as a user
   post '/login/?' do
-    user = User.get_user(nil, params[:username_or_email], params[:username_or_email])
+    user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
 
     if user.nil?
       log('/login', 'Login failed; no user found')

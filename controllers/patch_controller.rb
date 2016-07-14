@@ -66,7 +66,7 @@ class PatchController < ApplicationController
       current_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
     else
       # Web clients: we know they are authenticated if session[:user_id] exists
-      current_user = User.get_user(session[:user_id], nil, nil)
+      current_user = User.get_user(id: session[:user_id])
     end
 
     if current_user.nil?
@@ -114,7 +114,7 @@ class PatchController < ApplicationController
     log('/', nil)
     @latest_status_message = session[:status]
     @patches = Patch.order('id DESC').all
-    @logged_in_user = User.get_user(session[:user_id], nil, nil)
+    @logged_in_user = User.get_user(id: session[:user_id])
     erb :index
   end
 
