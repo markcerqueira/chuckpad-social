@@ -8,6 +8,10 @@ class UserController < ApplicationController
   MIN_USERNAME_LENGTH = 2
   MAX_USERNAME_LENGTH = 20
 
+  # Scenario: someone tries to log in at time 0. And then tries again at time 1. We will sleep for 1 second to make
+  # sure login requests are at least 2 seconds part.
+  LOGIN_THROTTLE_SECONDS = 2
+
   # Helper logging method
   def log(method, o)
     shared_log('UserController', method, o)
@@ -288,6 +292,21 @@ class UserController < ApplicationController
 
       error = true
       error_message = 'Unable to find user with details ' + params[:username_or_email]
+    end
+
+    # If someone is trying to log in too rapidly, slow them down a bit
+    unless error
+      unless user.last_login_attempt.nil?
+        seconds_since_last_login = (DateTime.now.to_f - user.last_login_attempt.to_f).to_f
+        if seconds_since_last_login < LOGIN_THROTTLE_SECONDS
+          sleep_length = LOGIN_THROTTLE_SECONDS - seconds_since_last_login
+          log('/login', "User attempted to login too quickly so sleeping for #{sleep_length} seconds")
+          sleep(sleep_length)
+        end
+      end
+
+      user.last_login_attempt = DateTime.now
+      user.save
     end
 
     unless error
