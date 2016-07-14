@@ -4,6 +4,8 @@ class UserController < ApplicationController
 
   MIN_PASSWORD_ENTROPY = 6
 
+  # Username length constraints (inclusive on both ends)
+  MIN_USERNAME_LENGTH = 2
   MAX_USERNAME_LENGTH = 20
 
   # Helper logging method
@@ -133,7 +135,7 @@ class UserController < ApplicationController
         fail_with_json_msg(500, 'Invalid characters or length for username')
         return
       else
-        redirect_to_index_with_status_msg('Username can only use alphanumeric, period, underscore, and hyphen characters and can\'t be longer than ' + MAX_USERNAME_LENGTH.to_s + ' characters')
+        redirect_to_index_with_status_msg("Username can only use alphanumeric, period, underscore, and hyphen characters and between #{MIN_USERNAME_LENGTH}-#{MAX_USERNAME_LENGTH} characters")
       end
     end
 
@@ -181,7 +183,7 @@ class UserController < ApplicationController
   end
 
   def username_is_valid(username)
-    username.count("^a-zA-Z0-9._\-").zero? && username.length <= MAX_USERNAME_LENGTH
+    username.count("^a-zA-Z0-9._\-").zero? and username.length <= MAX_USERNAME_LENGTH and username.length >= MIN_USERNAME_LENGTH
   end
 
   # Given token passed in url, finds the associated user and flags their email as confirmed
