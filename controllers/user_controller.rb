@@ -4,6 +4,8 @@ class UserController < ApplicationController
 
   MIN_PASSWORD_ENTROPY = 6
 
+  MAX_USERNAME_LENGTH = 20
+
   # Helper logging method
   def log(method, o)
     shared_log('UserController', method, o)
@@ -124,6 +126,17 @@ class UserController < ApplicationController
       end
     end
 
+    # Check that username has only valid characters and isn't too long
+    unless username_is_valid(username)
+      log('create_user', 'invalid characters in username ' + username)
+      if from_native_client(request)
+        fail_with_json_msg(500, 'Invalid characters or length for username')
+        return
+      else
+        redirect_to_index_with_status_msg('Username can only use alphanumeric, period, underscore, and hyphen characters and can\'t be longer than ' + MAX_USERNAME_LENGTH.to_s + ' characters')
+      end
+    end
+
     # Check password strength
     if is_password_weak('create_user', username, password)
       log('create_user', 'password is weak')
@@ -165,6 +178,10 @@ class UserController < ApplicationController
     else
       redirect_to_index_with_status_msg('User created with id ' + user.id.to_s)
     end
+  end
+
+  def username_is_valid(username)
+    username.count("^a-zA-Z0-9._\-").zero? && username.length <= MAX_USERNAME_LENGTH
   end
 
   # Given token passed in url, finds the associated user and flags their email as confirmed
