@@ -1,6 +1,6 @@
 ## chuckpad-social
 
-> "We have no nation, no philosophy, no ideology. We go where we're needed, chucking not for country, not for government, but for ourselves. We need no reason to chuck. We chuck because we are needed. We will be the deterrent for those with no other recourse. We are chuckers without borders, our purpose defined by the era we live in."
+> "We have no nation, no philosophy, no ideology. We go where we're needed, **chucking** not for country, not for government, but for ourselves. We need no reason to **chuck**. We **chuck** because we are needed. We will be the deterrent for those with no other recourse. We are **chuckers** without borders, our purpose defined by the era we live in."
 > 
 > ― Big Boss
 
