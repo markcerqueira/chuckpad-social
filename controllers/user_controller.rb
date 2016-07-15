@@ -40,12 +40,12 @@ class UserController < ApplicationController
 
   # Simple password checker to make sure password is not equal to username and not weak
   def is_password_weak(caller, username, password)
-    if password.nil? or password.length == 0
+    if password.nil? || password.length == 0
       log(caller, 'password is empty')
       return true
     end
 
-    if !username.nil? and password.eql? username
+    if !username.nil? && (password.eql? username)
       log(caller, 'password is the same as username')
       return true
     end
@@ -122,7 +122,7 @@ class UserController < ApplicationController
     # No user found so we can validate inputs and create a user
 
     # Check for username, password, and email being present
-    if username.blank? or password.blank? or email.blank?
+    if username.blank? || password.blank? || email.blank?
       log('create_user', 'one or more params are empty')
       if from_native_client(request)
         fail_with_json_msg(500, 'Username, password, and email are all required')
@@ -187,7 +187,7 @@ class UserController < ApplicationController
   end
 
   def username_is_valid(username)
-    username.count("^a-zA-Z0-9._\-").zero? and username.length <= MAX_USERNAME_LENGTH and username.length >= MIN_USERNAME_LENGTH
+    username.count("^a-zA-Z0-9._\-").zero? && username.length.between?(MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH)
   end
 
   # Given token passed in url, finds the associated user and flags their email as confirmed
@@ -195,7 +195,7 @@ class UserController < ApplicationController
   get '/confirm/:token/?' do
     token = params[:token].to_s
 
-    if token.nil? or token.empty?
+    if token.nil? || token.empty?
       log('confirm/:token/', 'token is nil or empty')
       return
     end
