@@ -19,6 +19,14 @@ class Patch < ActiveRecord::Base
 
   # Returns patch object as a hash
   def to_hash()
+    # This can only happen if we allow deleting users. Do not allow deleting users?
+    creator = User.get_user(id: creator_id)
+    if creator.nil?
+      creator_username = ''
+    else
+      creator_username = creator.username
+    end
+
     {
         'id' => id,
         'name' => name,
@@ -28,7 +36,7 @@ class Patch < ActiveRecord::Base
         'filename' => filename,
         'content_type' => content_type,
         'creator_id' => creator_id,
-        'creator_username' => User.get_user(id: creator_id).username,
+        'creator_username' => creator_username,
         'resource' => '/patch/show/' + id.to_s
     }
   end

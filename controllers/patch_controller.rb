@@ -159,7 +159,7 @@ class PatchController < ApplicationController
     # Save patch
     if patch.save
       if from_native_client(request)
-        success_with_json_msg(to_hash(patch))
+        success_with_json_msg(patch.to_json)
       else
         redirect_to_index_with_status_msg('Patch created with id = ' + patch.id.to_s)
       end

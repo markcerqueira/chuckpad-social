@@ -16,7 +16,8 @@ class User < ActiveRecord::Base
   # found or the password is incorrect, nil is returned.
   def self.get_user_with_verification(username, email, password)
     user = get_user(username: username, email: email)
-    if user.password_hash == BCrypt::Engine.hash_secret(password, user.salt)
+
+    if !user.nil? && user.password_hash == BCrypt::Engine.hash_secret(password, user.salt)
       return user
     end
 
