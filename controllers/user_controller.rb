@@ -215,7 +215,7 @@ class UserController < ApplicationController
 
   post '/change_password/?' do
     if from_native_client(request)
-      logged_in_user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
+      logged_in_user = User.get_user_with_verification(username: params[:username_or_email], email: params[:username_or_email], password: params[:password])
     else
       logged_in_user = User.get_user(id: session[:user_id])
     end
@@ -230,10 +230,10 @@ class UserController < ApplicationController
       end
     end
 
-    password = params[:password]
-    password.strip!
+    new_password = params[:new_password]
+    new_password.strip!
 
-    if is_password_weak('change_password', nil, password)
+    if is_password_weak('change_password', nil, new_password)
       log('change_password', 'password is weak')
       if from_native_client(request)
         fail_with_json_msg(500, 'The password is too weak')
@@ -244,7 +244,7 @@ class UserController < ApplicationController
     end
 
     logged_in_user.salt = BCrypt::Engine.generate_salt
-    logged_in_user.password_hash = BCrypt::Engine.hash_secret(password, logged_in_user.salt)
+    logged_in_user.password_hash = BCrypt::Engine.hash_secret(new_password, logged_in_user.salt)
 
     logged_in_user.save
 

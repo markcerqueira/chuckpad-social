@@ -92,13 +92,13 @@ class ApplicationController < Sinatra::Base
     # We want the HTTP request to succeed so set it to 200
     # Code internally will be non-200 in this case
     status 200
-    content_type 'application/json'
+    content_type 'text/json'
     body get_response_body(code, msg)
   end
 
   def success_with_json_msg(msg)
     status 200
-    content_type 'application/json'
+    content_type 'text/json'
     body get_response_body(200, msg)
   end
 
