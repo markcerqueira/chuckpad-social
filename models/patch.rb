@@ -37,7 +37,7 @@ class Patch < ActiveRecord::Base
         'content_type' => content_type,
         'creator_id' => creator_id,
         'creator_username' => creator_username,
-        'resource' => '/patch/show/' + id.to_s
+        'resource' => '/patch/download/' + id.to_s
     }
   end
 
