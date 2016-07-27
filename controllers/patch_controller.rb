@@ -173,7 +173,7 @@ class PatchController < ApplicationController
     end
   end
 
-  # Updates an existing patch. Supports updating file and name of the patch. Revision is
+  # Updates an existing patch. Supports updating data file, name of the patch, and visibility. Revision is
   # incremented when an update occurs.
   post '/update/?' do
     log('update', nil)
@@ -200,13 +200,23 @@ class PatchController < ApplicationController
       revision_made = true
     end
 
+    hidden = params[:patch][:hidden]
+    unless hidden.nil? or hidden.empty?
+      patch.hidden = hidden
+      revision_made = true;
+    end
+
     if revision_made
       patch.revision = patch.revision + 1
       patch.save
     end
 
     # TODO Switch on if a change was made?
-    redirect_to_index_with_status_msg('Updated patch with id ' + params[:id].to_s)
+    if from_native_client(request)
+      success_with_json_msg(patch.to_json)
+    else
+      redirect_to_index_with_status_msg('Updated patch with id ' + params[:id].to_s)
+    end
   end
 
   # Returns information for patch with parameter id in JSON format

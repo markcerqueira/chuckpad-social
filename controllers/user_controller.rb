@@ -285,7 +285,24 @@ class UserController < ApplicationController
 
   # Logs in as a user
   post '/login/?' do
-    user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
+    username_or_email = params[:username_or_email]
+    username_or_email.strip
+
+    password = params[:password]
+    password.strip
+
+    # Check for username, password, and email being present
+    if username_or_email.blank? || password.blank?
+      log('login', 'one or more params are empty')
+      if from_native_client(request)
+        fail_with_json_msg(500, 'Username/email and password are required.')
+        return
+      else
+        redirect_to_index_with_status_msg('Username/email and password are required.')
+      end
+    end
+
+    user = User.get_user(username: username_or_email, email: username_or_email)
 
     if user.nil?
       log('/login', 'Login failed; no user found')
@@ -310,7 +327,7 @@ class UserController < ApplicationController
     end
 
     unless error
-      if user.password_hash == BCrypt::Engine.hash_secret(params[:password], user.salt)
+      if user.password_hash == BCrypt::Engine.hash_secret(password, user.salt)
         session[:user_id] = user.id
         # No current notion of session for native clients
       else
