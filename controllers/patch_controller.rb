@@ -274,7 +274,7 @@ class PatchController < ApplicationController
   get '/json/all/?' do
     log('/json/all', nil)
     content_type 'text/json'
-    Patch.visible.to_json
+    Patch.visible.order('id DESC').to_json
   end
 
   # Returns all (non-hidden) featured patches as a JSON list
