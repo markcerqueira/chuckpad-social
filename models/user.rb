@@ -24,6 +24,21 @@ class User < ActiveRecord::Base
     return nil
   end
 
+  # Converts user to json using to_hash method
+  def as_json(options)
+    to_hash()
+  end
+
+  # Returns user object as a hash
+  def to_hash()
+    {
+        'id' => id,
+        'username' => username,
+        'email' => email,
+        'admin' => admin
+    }
+  end
+
   def display_str
     "#{username} (#{id})"
   end

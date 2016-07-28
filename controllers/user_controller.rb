@@ -346,11 +346,10 @@ class UserController < ApplicationController
         redirect_to_index_with_status_msg(error_message)
       end
     else
-      success_msg = 'Logged in successfully'
       if from_native_client(request)
-        success_with_json_msg(success_msg)
+        success_with_json_msg(user.to_json)
       else
-        redirect_to_index_with_status_msg(success_msg)
+        redirect_to_index_with_status_msg('Logged in successfully')
       end
     end
   end
