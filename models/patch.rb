@@ -27,12 +27,21 @@ class Patch < ActiveRecord::Base
       creator_username = creator.username
     end
 
+    # TODO Check parent for visibility access in case it changes
+    parentPatch = Patch.find_by_id(parent_id)
+    patch_parent_id = -1
+    unless parentPatch.nil?
+      patch_parent_id = parent_id
+    end
+
     {
         'id' => id,
         'name' => name,
+        'description' => description,
         'featured' => featured,
         'documentation' => documentation,
         'hidden' => hidden, # Only creators of a particular patch will ever get back hidden => true
+        'parent_id' => patch_parent_id,
         'filename' => filename,
         'content_type' => content_type,
         'creator_id' => creator_id,

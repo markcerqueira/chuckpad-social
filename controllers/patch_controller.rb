@@ -146,6 +146,8 @@ class PatchController < ApplicationController
       p.featured = params[:patch].has_key?('featured')
       p.documentation = params[:patch].has_key?('documentation')
       p.hidden = params[:patch].has_key?('hidden')
+      p.description = params[:patch][:description]
+      p.parent_id = params[:patch][:parent_id]
       p.data = params[:patch][:data][:tempfile].read
       p.filename = params[:patch][:data][:filename]
       p.content_type = params[:patch][:data][:type]
@@ -195,15 +197,21 @@ class PatchController < ApplicationController
     end
 
     name = params[:patch][:name]
-    unless name.nil? or name.empty?
+    unless name.nil? || name.empty?
       patch.name = name
       revision_made = true
     end
 
     hidden = params[:patch][:hidden]
-    unless hidden.nil? or hidden.empty?
+    unless hidden.nil? || hidden.empty?
       patch.hidden = hidden
       revision_made = true;
+    end
+
+    description = params[:patch][:description]
+    unless description.nil? || description.empty?
+      patch.description = description
+      revision_made = true
     end
 
     if revision_made

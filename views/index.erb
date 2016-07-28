@@ -31,6 +31,14 @@
             <td><input type="text" name="patch[name]" value=""/></td>
           </tr>
           <tr>
+            <td>Patch Description</td>
+            <td><input type="text" name="patch[description]" value=""/></td>
+          </tr>
+          <tr>
+            <td>Parent Patch ID</td>
+            <td><input type="text" name="patch[parent_id]" value=""/></td>
+          </tr>
+          <tr>
             <td>Featured</td>
             <td><input type="checkbox" name="patch[featured]" value="0"/></td>
           </tr>
@@ -70,6 +78,10 @@
             <td><input type="text" name="patch[name]" value=""/></td>
           </tr>
           <tr>
+            <td>Patch Description</td>
+            <td><input type="text" name="patch[description]" value=""/></td>
+          </tr>
+          <tr>
             <td>File (10 KB max) to upload</td>
             <td><input type="file" name="patch[data]"></td>
           </tr>
@@ -101,6 +113,8 @@
     <thead>
     <th>Id</th>
     <th>Name</th>
+    <th>Description</th>
+    <th>Parent ID</th>
     <th>Featured</th>
     <th>Documentation</th>
     <th>Hidden</th>
@@ -115,6 +129,8 @@
         <tr>
           <td><%= patch.id %></td>
           <td><%= patch.name %></td>
+          <td><%= patch.description %></td>
+          <td><%= patch.parent_id %></td>
           <td><%= patch.featured %></td>
           <td><%= patch.documentation %></td>
           <td><%= patch.hidden %></td>
@@ -123,6 +139,7 @@
           <td><%= patch.content_type %></td>
           <td><%= patch.creator_display_str %></td>
           <td><a href='patch/download/<%= patch.id %>'>Download</a>
+            / <a href='patch/download/<%= patch.parent_id %>'>Download Parent</a>
             / <a href='patch/delete/<%= patch.id %>'>Delete</a>
             / <a href='patch/toggle_hidden/<%= patch.id %>'>Toggle Hidden</a></td>
         </tr>
