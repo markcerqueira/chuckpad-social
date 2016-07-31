@@ -43,9 +43,11 @@ class Patch < ActiveRecord::Base
         'hidden' => hidden, # Only creators of a particular patch will ever get back hidden => true
         'parent_id' => patch_parent_id,
         'filename' => filename,
-        'content_type' => content_type,
         'creator_id' => creator_id,
         'creator_username' => creator_username,
+        'created_at' => created_at.strftime('%Y-%m-%d %H:%M:%S'), # http://stackoverflow.com/a/9132422/265791
+        'updated_at' => updated_at.strftime('%Y-%m-%d %H:%M:%S'),
+        'download_count' => download_count,
         'resource' => '/patch/download/' + id.to_s
     }
   end

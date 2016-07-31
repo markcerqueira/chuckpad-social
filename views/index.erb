@@ -120,7 +120,6 @@
     <th>Hidden</th>
     <th>Revision</th>
     <th>Filename</th>
-    <th>Content Type</th>
     <th>Creator</th>
     <th>Actions</th>
     </thead>
@@ -136,7 +135,6 @@
           <td><%= patch.hidden %></td>
           <td><%= patch.revision %></td>
           <td><%= patch.filename %></td>
-          <td><%= patch.content_type %></td>
           <td><%= patch.creator_display_str %></td>
           <td><a href='patch/download/<%= patch.id %>'>Download</a>
             / <a href='patch/download/<%= patch.parent_id %>'>Download Parent</a>

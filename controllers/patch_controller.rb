@@ -150,11 +150,18 @@ class PatchController < ApplicationController
       p.parent_id = params[:patch][:parent_id]
       p.data = params[:patch][:data][:tempfile].read
       p.filename = params[:patch][:data][:filename]
-      p.content_type = params[:patch][:data][:type]
       p.creator_id = current_user.id
       p.revision = 1
-      if p.name.nil? or p.name.empty?
+      p.created_at = DateTime.now.new_offset(0)
+      p.updated_at = DateTime.now.new_offset(0)
+      p.download_count = 0;
+
+      if p.name.nil? || p.name.empty?
         p.name = p.filename
+      end
+
+      if p.description.nil? || p.description.empty?
+        p.description = ''
       end
     end
 
@@ -192,7 +199,6 @@ class PatchController < ApplicationController
     unless data.nil?
       patch.data = params[:patch][:data][:tempfile].read
       patch.filename = params[:patch][:data][:filename]
-      patch.content_type = params[:patch][:data][:type]
       revision_made = true
     end
 
@@ -215,6 +221,7 @@ class PatchController < ApplicationController
     end
 
     if revision_made
+      patch.updated_at = DateTime.now.new_offset(0)
       patch.revision = patch.revision + 1
       patch.save
     end
@@ -306,6 +313,9 @@ class PatchController < ApplicationController
       log('/download', 'get_patch call had an error')
       return
     end
+
+    patch.download_count += 1
+    patch.save
 
     # Downloads the patch data
     attachment patch.filename

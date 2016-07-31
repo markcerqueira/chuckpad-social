@@ -8,7 +8,14 @@ class CreateUser < ActiveRecord::Migration
       t.string :salt, :null => false
       t.string :password_hash, :null => false
 
+      t.boolean :email_confirmed, :default => false
+      t.string :confirm_token
+
       t.boolean :admin
+
+      t.datetime :last_login_attempt
+
+      t.datetime :created_at
     end
   end
 
