@@ -235,7 +235,7 @@ class PatchController < ApplicationController
   end
 
   # Returns information for patch with parameter id in JSON format
-  get '/json/info/:id/?' do
+  get '/info/:id/?' do
     patch, error = get_patch('/json/info', request, params[:id])
     if error
       log('/json/info', 'get_patch call had an error')
@@ -259,8 +259,8 @@ class PatchController < ApplicationController
   # Returns patches for the given user in JSON format
   # If the id requested belongs to the user making the request, hidden patches will be returned;
   # otherwise only non-hidden patches will be returned
-  get '/json/user/:id/?' do
-    log('/json/user', nil)
+  get '/user/:id/?' do
+    log('user', nil)
     content_type 'text/json'
 
     show_hidden = false
@@ -280,28 +280,21 @@ class PatchController < ApplicationController
 
   # Returns recently created patches
   get '/new/?' do
-    log('/new', nil)
+    log('new', nil)
     content_type 'text/json'
     Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json
   end
 
-  # Returns all (non-hidden) patches as a JSON list
-  get '/json/all/?' do
-    log('/json/all', nil)
-    content_type 'text/json'
-    Patch.visible.order('id DESC').to_json
-  end
-
   # Returns all (non-hidden) featured patches as a JSON list
-  get '/json/featured/?' do
-    log('/json/featured', nil)
+  get '/featured/?' do
+    log('featured', nil)
     content_type 'text/json'
     Patch.visible_featured.to_json
   end
 
   # Returns all (non-hidden) documentation patches as a JSON list
-  get '/json/documentation/?' do
-    log('/json/documentation', nil)
+  get '/documentation/?' do
+    log('documentation', nil)
     content_type 'text/json'
     Patch.visible_documentation.to_json
   end
@@ -310,7 +303,7 @@ class PatchController < ApplicationController
   get '/download/:id/?' do
     patch, error = get_patch('/download', request, params[:id])
     if error
-      log('/download', 'get_patch call had an error')
+      log('download', 'get_patch call had an error')
       return
     end
 
@@ -325,7 +318,7 @@ class PatchController < ApplicationController
 
   # Deletes patch for given patch id
   get '/delete/:id/?' do
-    log('/delete', nil)
+    log('delete', nil)
 
     patch, error = get_user_authenticated_and_modifiable_patch('/delete', request, params)
     if error
