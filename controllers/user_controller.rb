@@ -215,7 +215,7 @@ class UserController < ApplicationController
 
   post '/change_password/?' do
     if from_native_client(request)
-      logged_in_user = User.get_user_with_verification(username: params[:username_or_email], email: params[:username_or_email], password: params[:password])
+      logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
     else
       logged_in_user = User.get_user(id: session[:user_id])
     end

@@ -335,24 +335,11 @@ class PatchController < ApplicationController
 
     patch.delete
 
-    redirect_to_index_with_status_msg('Deleted patch with id ' + params[:id].to_s)
-  end
-
-  # Toggles hidden visibility on patch
-  get '/toggle_hidden/:id/?' do
-    log('toggle_hidden', nil)
-
-    patch, error = get_user_authenticated_and_modifiable_patch('/toggle_hidden', request, params)
-    if error
-      log('/toggle_hidden', 'get_user_authenticated_and_modifiable_patch call had an error')
-      return
+    if from_native_client(request)
+      success_with_json_msg('Successfully deleted patch')
+    else
+      redirect_to_index_with_status_msg('Deleted patch with id ' + params[:id].to_s)
     end
-
-    patch.hidden = !patch.hidden
-
-    patch.save
-
-    redirect_to_index_with_status_msg('Toggled hidden state for patch with id ' + params[:id].to_s)
   end
 
 end

@@ -136,10 +136,11 @@
           <td><%= patch.revision %></td>
           <td><%= patch.filename %></td>
           <td><%= patch.creator_display_str %></td>
-          <td><a href='patch/download/<%= patch.id %>'>Download</a>
+          <td>
+              <a href='patch/download/<%= patch.id %>'>Download</a>
             / <a href='patch/download/<%= patch.parent_id %>'>Download Parent</a>
             / <a href='patch/delete/<%= patch.id %>'>Delete</a>
-            / <a href='patch/toggle_hidden/<%= patch.id %>'>Toggle Hidden</a></td>
+          </td>
         </tr>
     <% end %>
     </tbody>
