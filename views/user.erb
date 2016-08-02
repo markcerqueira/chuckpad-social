@@ -106,8 +106,7 @@
           <td><%= user.admin %></td>
           <td><%= user.email_confirmed %></td>
           <td><%= user.get_patch_count %></td>
-          <td><a href='user/delete/<%= user.id %>'>Delete</a> /
-              <a href='patch/json/user/<%= user.id %>'>Patch List</a></td>
+          <td><a href='patch/user/<%= user.id %>'>Patch List</a></td>
         </tr>
     <% end %>
     </tbody>

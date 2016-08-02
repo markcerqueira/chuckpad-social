@@ -255,26 +255,6 @@ class UserController < ApplicationController
     end
   end
 
-  # Deletes user with the passed id
-  get '/delete/:id/?' do
-    log('delete', params)
-
-    user = User.get_user(id: params[:id])
-
-    if user.nil?
-      log('delete', 'No user found')
-      unless from_native_client(request)
-        redirect_to_index_with_status_msg('No user found with id ' + params[:id].to_s)
-      end
-    end
-
-    user.delete
-
-    unless from_native_client(request)
-      redirect_to_index_with_status_msg('User deleted with id ' + user.id.to_s)
-    end
-  end
-
   # Clears session cookie
   get '/logout/:id/?' do
     log('logout', params)

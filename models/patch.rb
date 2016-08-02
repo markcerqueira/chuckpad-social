@@ -19,14 +19,6 @@ class Patch < ActiveRecord::Base
 
   # Returns patch object as a hash
   def to_hash()
-    # This can only happen if we allow deleting users. Do not allow deleting users?
-    creator = User.get_user(id: creator_id)
-    if creator.nil?
-      creator_username = ''
-    else
-      creator_username = creator.username
-    end
-
     # TODO Check parent for visibility access in case it changes
     parentPatch = Patch.find_by_id(parent_id)
     patch_parent_id = -1
@@ -44,7 +36,7 @@ class Patch < ActiveRecord::Base
         'parent_id' => patch_parent_id,
         'filename' => filename,
         'creator_id' => creator_id,
-        'creator_username' => creator_username,
+        'creator_username' => User.get_user(id: creator_id).username,
         'created_at' => created_at.strftime('%Y-%m-%d %H:%M:%S'), # http://stackoverflow.com/a/9132422/265791
         'updated_at' => updated_at.strftime('%Y-%m-%d %H:%M:%S'),
         'download_count' => download_count,
