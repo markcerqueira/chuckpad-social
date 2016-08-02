@@ -180,7 +180,7 @@ class UserController < ApplicationController
     send_confirmation_email(user, request)
 
     if from_native_client(request)
-      success_with_json_msg('User created with id ' + user.id.to_s + '. Confirmation email sent to ' + user.email.to_s)
+      success_with_json_msg(user.to_json)
     else
       redirect_to_index_with_status_msg('User created with id ' + user.id.to_s)
     end
