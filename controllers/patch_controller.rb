@@ -264,7 +264,7 @@ class PatchController < ApplicationController
     content_type 'text/json'
 
     show_hidden = false
-    current_user, error = get_user_from_params('/json/user', request, params, true)
+    current_user, error = get_user_from_params('user', request, params, true)
     unless current_user.nil?
       show_hidden = current_user.id.to_i == params[:id].to_i
     end

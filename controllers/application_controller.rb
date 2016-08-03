@@ -19,6 +19,8 @@ module MailHelper
   # Helper method to send someone an email
   def self.send_email(to_field, subject_text, html_body_text)
     begin
+      puts ENV['EMAIL_FROM_EMAIL'].to_s + ', ' + ENV['EMAIL_FROM_NAME'].to_s
+
       from = Email.new(email: ENV['EMAIL_FROM_EMAIL'].to_s, name: ENV['EMAIL_FROM_NAME'].to_s)
       to = Email.new(email: to_field)
       subject = subject_text
