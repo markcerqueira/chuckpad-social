@@ -3,8 +3,9 @@
 # variables you would want to set.
 config_env do
   set 'RACK_COOKIE_SECRET', ''
-  set 'EMAIL_USER_NAME', ''
-  set 'EMAIL_PASSWORD', ''
-  set 'EMAIL_FROM_EMAIL',  ''
-  set 'EMAIL_MAIL_SERVER', ''
+
+  # Email
+  set 'EMAIL_FROM_NAME', ''
+  set 'EMAIL_FROM_ADDRESS', ''
+  set 'SENDGRID_API_KEY', ''
 end
