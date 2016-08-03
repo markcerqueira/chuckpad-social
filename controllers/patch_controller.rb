@@ -111,7 +111,7 @@ class PatchController < ApplicationController
 
   # Index page that shows index.erb and lists all patches
   get '/' do
-    log('/', nil)
+    log('', nil)
     @latest_status_message = session[:status]
     @patches = Patch.order('id DESC').all
     @logged_in_user = User.get_user(id: session[:user_id])

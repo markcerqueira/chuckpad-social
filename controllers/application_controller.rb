@@ -5,30 +5,31 @@ require 'active_record'
 require 'bcrypt'
 require 'email_validator'
 require 'json'
-require 'mail'
+require 'sendgrid-ruby'
 require 'strong_password'
 
 require './models/patch'
 require './models/user'
+
+
+include SendGrid
 
 module MailHelper
 
   # Helper method to send someone an email
   def self.send_email(to_field, subject_text, html_body_text)
     begin
-      mail = Mail.new do
-        to to_field
-        from ENV['EMAIL_FROM_EMAIL'].to_s
-        subject subject_text
-        # body body_text
-        html_part do
-          content_type 'text/html; charset=UTF-8'
-          body html_body_text
-        end
-      end
-      mail.deliver!
-    rescue
-      puts 'send_email - error sending email: ' + "#{$!}"
+      from = Email.new(email: ENV['EMAIL_FROM_EMAIL'].to_s, name: ENV['EMAIL_FROM_NAME'].to_s)
+      to = Email.new(email: to_field)
+      subject = subject_text
+      content = Content.new(type: 'text/html', value: html_body_text)
+      mail = Mail.new(from, subject, to, content)
+
+      sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
+      response = sg.client.mail._('send').post(request_body: mail.to_json)
+      puts response.status_code.to_s + ', ' + response.body.to_s + ', ' + response.headers.to_s
+    rescue Exception => e
+      puts "send_email - exception thrown: #{e.message}"
     end
   end
 
@@ -39,19 +40,6 @@ class ApplicationController < Sinatra::Base
   CHUCKPAD_SOCIAL_IOS = 'chuckpad-social-ios'
 
   helpers MailHelper
-
-  # Configure mail gem
-  options = { :address              => ENV['EMAIL_MAIL_SERVER'].to_s,
-              :port                 => 587,
-              :user_name            => ENV['EMAIL_USER_NAME'].to_s,
-              :password             => ENV['EMAIL_PASSWORD'].to_s,
-              :authentication       => 'plain',
-              :enable_starttls_auto => true,
-              :openssl_verify_mode  => OpenSSL::SSL::VERIFY_NONE }
-
-  Mail.defaults do
-    delivery_method :smtp, options
-  end
 
   # Tell Sinatra about special MIME types
   # http://stackoverflow.com/a/18574464/265791
