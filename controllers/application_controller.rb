@@ -11,11 +11,35 @@ require 'strong_password'
 require './models/patch'
 require './models/user'
 
+
 include SendGrid
+
+module MailHelper
+
+  # Helper method to send someone an email
+  def self.send_email(to_field, subject_text, html_body_text)
+    begin
+      from = Email.new(email: ENV['EMAIL_FROM_ADDRESS'].to_s, name: ENV['EMAIL_FROM_NAME'].to_s)
+      to = Email.new(email: to_field)
+      subject = subject_text
+      content = Content.new(type: 'text/html', value: html_body_text)
+      mail = Mail.new(from, subject, to, content)
+
+      sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
+      response = sg.client.mail._('send').post(request_body: mail.to_json)
+      puts response.status_code.to_s + ', ' + response.body.to_s + ', ' + response.headers.to_s
+    rescue Exception => e
+      puts "send_email - exception thrown: #{e.message}"
+    end
+  end
+
+end
 
 class ApplicationController < Sinatra::Base
 
   CHUCKPAD_SOCIAL_IOS = 'chuckpad-social-ios'
+
+  helpers MailHelper
 
   # Tell Sinatra about special MIME types
   # http://stackoverflow.com/a/18574464/265791
@@ -37,24 +61,6 @@ class ApplicationController < Sinatra::Base
       :path => '/',
       :expire_after => 2592000, # 30 days in seconds
       :secret => ENV['RACK_COOKIE_SECRET'].to_s
-
-
-  # Helper method to send someone an email
-  def self.send_email(to_field, subject_text, html_body_text)
-    begin
-      from = Email.new(email: ENV['EMAIL_FROM_ADDRESS'].to_s, name: ENV['EMAIL_FROM_NAME'].to_s)
-      to = Email.new(email: to_field)
-      subject = subject_text
-      content = Content.new(type: 'text/html', value: html_body_text)
-      mail = Mail.new(from, subject, to, content)
-
-      sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
-      response = sg.client.mail._('send').post(request_body: mail.to_json)
-      puts response.status_code.to_s + ', ' + response.body.to_s + ', ' + response.headers.to_s
-    rescue Exception => e
-      puts "send_email - exception thrown: #{e.message}"
-    end
-  end
 
   # Shared logging function for standardized logging to the console
   def shared_log(controller, method, o)
