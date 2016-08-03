@@ -18,9 +18,13 @@ chuckpad-social is an upload-download service for ChucK patches. Designed to hel
 * Locally visit [localhost:9292](http://localhost:9292/). As files are changed the rerun gem will automatically reload the app.
 * If you need to reset database on Heroku: `heroku pg:reset DATABASE --app chuckpad-social` and then `heroku run rake db:migrate --app chuckpad-social`
 
-
 ### Contribute
 Improvements are appreciated and always welcome! If you'd like to work on features on the roadmap, feel free to view our [project task page on Asana][5]. You'll need to log into your Asana account.
+
+### Related Repositories
+* [hello-chuckpad][8] is a "Hello, World" project that uses this service with a suite of unit tests to verify the interactions between this iOS library and the service. 
+* [chuckpad-social-ios][9] is the iOS API that can interact with this service.
+* [miniAudicle][10] will be the first product in the iOS App Store that uses the chuckpad-social service and this library. 
 
 ### README TODOs
 * Set environmental variable RACK_COOKIE_SECRET on Heroku
@@ -46,3 +50,6 @@ Improvements are appreciated and always welcome! If you'd like to work on featur
 [5]: https://app.asana.com/-/share?s=147252256199690-lWxuO8hBjVq7jOGkmVlwpUpsPfvH9ekYGQToiw1dMUP-868703070985
 [6]: https://github.com/markcerqueira/chuckpad-social-ios
 [7]: https://help.dreamhost.com/hc/en-us/articles/220854287-What-SPF-records-do-I-use-
+[8]: https://github.com/markcerqueira/hello-chuckpad
+[9]: https://github.com/markcerqueira/chuckpad-social-ios
+[10]: https://github.com/ccrma/miniAudicle
