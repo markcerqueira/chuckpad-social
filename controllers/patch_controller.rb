@@ -253,7 +253,7 @@ class PatchController < ApplicationController
       return
     end
 
-    Patch.where(creator_id: current_user.id).to_json
+    success_with_json_msg(Patch.where(creator_id: current_user.id).to_json)
   end
 
   # Returns patches for the given user in JSON format
@@ -275,28 +275,28 @@ class PatchController < ApplicationController
       patches.visible
     end
 
-    patches.order('id DESC').to_json
+    success_with_json_msg(patches.order('id DESC').to_json)
   end
 
   # Returns recently created patches
   get '/new/?' do
     log('new', nil)
     content_type 'text/json'
-    Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json
+    success_with_json_msg(Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
   end
 
   # Returns all (non-hidden) featured patches as a JSON list
   get '/featured/?' do
     log('featured', nil)
     content_type 'text/json'
-    Patch.visible_featured.to_json
+    success_with_json_msg(Patch.visible_featured.to_json)
   end
 
   # Returns all (non-hidden) documentation patches as a JSON list
   get '/documentation/?' do
     log('documentation', nil)
     content_type 'text/json'
-    Patch.visible_documentation.to_json
+    success_with_json_msg(Patch.visible_documentation.to_json)
   end
 
   # Downloads patch file for given patch id

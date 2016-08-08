@@ -112,7 +112,11 @@ class UserController < ApplicationController
       log('create_user', 'user already exists for username = ' + username + '; email = ' + email)
 
       if from_native_client(request)
-        fail_with_json_msg(500, 'Unable to create user because user already exists')
+        if existing_user.email.eql? email
+          fail_with_json_msg(500, 'A user with that email address already exists')
+        else
+          fail_with_json_msg(500, 'A user with that username already exists.')
+        end
         return
       else
         redirect_to_index_with_status_msg('Unable to create user because user already exists')
@@ -285,7 +289,7 @@ class UserController < ApplicationController
     user = User.get_user(username: username_or_email, email: username_or_email)
 
     if user.nil?
-      log('/login', 'Login failed; no user found')
+      log('login', 'Login failed; no user found')
 
       error = true
       error_message = 'Unable to find user with details ' + params[:username_or_email]
@@ -297,7 +301,7 @@ class UserController < ApplicationController
         seconds_since_last_login = (DateTime.now.to_f - user.last_login_attempt.to_f).to_f
         if seconds_since_last_login < LOGIN_THROTTLE_SECONDS
           sleep_length = LOGIN_THROTTLE_SECONDS - seconds_since_last_login
-          log('/login', "User attempted to login too quickly so sleeping for #{sleep_length} seconds")
+          log('login', "User attempted to login too quickly so sleeping for #{sleep_length} seconds")
           sleep(sleep_length)
         end
       end
@@ -311,7 +315,7 @@ class UserController < ApplicationController
         session[:user_id] = user.id
         # No current notion of session for native clients
       else
-        log('/login', 'Bad password')
+        log('login', 'Bad password')
 
         error = true
         error_message = 'Login failed because of bad password'
