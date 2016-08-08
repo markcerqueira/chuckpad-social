@@ -112,8 +112,10 @@ class UserController < ApplicationController
       log('create_user', 'user already exists for username = ' + username + '; email = ' + email)
 
       if from_native_client(request)
-        if existing_user.email.eql? email
-          fail_with_json_msg(500, 'A user with that email address already exists')
+        if existing_user.email == email && existing_user.username == username
+          fail_with_json_msg(500, 'A user with that email address and username already exists.')
+        elsif existing_user.email == email
+          fail_with_json_msg(500, 'A user with that email address already exists.')
         else
           fail_with_json_msg(500, 'A user with that username already exists.')
         end
