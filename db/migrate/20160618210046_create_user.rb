@@ -11,7 +11,7 @@ class CreateUser < ActiveRecord::Migration
       t.boolean :email_confirmed, :default => false
       t.string :confirm_token
 
-      t.boolean :admin
+      t.boolean :admin, :default => false
 
       t.datetime :last_login_attempt
 

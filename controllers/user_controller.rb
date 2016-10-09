@@ -2,12 +2,6 @@ require './controllers/application_controller'
 
 class UserController < ApplicationController
 
-  MIN_PASSWORD_ENTROPY = 6
-
-  # Username length constraints (inclusive on both ends)
-  MIN_USERNAME_LENGTH = 2
-  MAX_USERNAME_LENGTH = 20
-
   # Scenario: someone tries to log in at time 0. And then tries again at time 1. We will sleep for 1 second to make
   # sure login requests are at least 2 seconds part.
   LOGIN_THROTTLE_SECONDS = 2
@@ -38,23 +32,6 @@ class UserController < ApplicationController
     redirect '/user'
   end
 
-  # Simple password checker to make sure password is not equal to username and not weak
-  def is_password_weak(caller, username, password)
-    if password.nil? || password.length == 0
-      log(caller, 'password is empty')
-      return true
-    end
-
-    if !username.nil? && (password.eql? username)
-      log(caller, 'password is the same as username')
-      return true
-    end
-
-    password_entropy = StrongPassword::StrengthChecker.new(password).calculate_entropy
-    log(caller, 'password.length = ' + password.length.to_s + '; password_entropy = '+  password_entropy.to_s)
-    return password_entropy.to_i < MIN_PASSWORD_ENTROPY
-  end
-
   # Sends confirmation email to user passed in
   # Confirmation email is HTML-based and is pulled from the views/welcome_email.erb file
   def send_confirmation_email(user, request)
@@ -63,8 +40,16 @@ class UserController < ApplicationController
       return
     end
 
+    if request.nil?
+      base_url = 'https://chuckpad-social.herokuapp.com'
+    else
+      base_url = request.base_url
+    end
+
+    log('send_confirmation_email', base_url)
+
     subject = 'Welcome to ChuckPad!'
-    html_body = erb :welcome_email, locals: { username: user.username, confirm_link: request.base_url.to_s + '/user/confirm/' + user.confirm_token }
+    html_body = erb :welcome_email, locals: { username: user.username, confirm_link: base_url.to_s + '/user/confirm/' + user.confirm_token }
 
     MailHelper.send_email(user.email, subject, html_body)
 
@@ -139,7 +124,7 @@ class UserController < ApplicationController
     end
 
     # Check that username has only valid characters and isn't too long
-    unless username_is_valid(username)
+    unless User.username_is_valid(username)
       log('create_user', 'invalid characters in username ' + username)
       if from_native_client(request)
         fail_with_json_msg(500, 'Invalid characters or length for username')
@@ -150,7 +135,7 @@ class UserController < ApplicationController
     end
 
     # Check password strength
-    if is_password_weak('create_user', username, password)
+    if User.is_password_weak('create_user', username, password)
       log('create_user', 'password is weak')
       if from_native_client(request)
         fail_with_json_msg(500, 'The password is too weak')
@@ -183,17 +168,15 @@ class UserController < ApplicationController
 
     user.save
 
+    auth_token = AuthToken.generate_token(user)
+
     send_confirmation_email(user, request)
 
     if from_native_client(request)
-      success_with_json_msg(user.to_json)
+      success_with_json_msg(user.as_json(nil, auth_token.auth_token))
     else
       redirect_to_index_with_status_msg('User created with id ' + user.id.to_s)
     end
-  end
-
-  def username_is_valid(username)
-    username.count("^a-zA-Z0-9._\-").zero? && username.length.between?(MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH)
   end
 
   # Given token passed in url, finds the associated user and flags their email as confirmed
@@ -221,7 +204,7 @@ class UserController < ApplicationController
 
   post '/change_password/?' do
     if from_native_client(request)
-      logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
+      logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
     else
       logged_in_user = User.get_user(id: session[:user_id])
     end
@@ -239,7 +222,7 @@ class UserController < ApplicationController
     new_password = params[:new_password]
     new_password.strip!
 
-    if is_password_weak('change_password', nil, new_password)
+    if User.is_password_weak('change_password', nil, new_password)
       log('change_password', 'password is weak')
       if from_native_client(request)
         fail_with_json_msg(500, 'The password is too weak')
@@ -267,6 +250,9 @@ class UserController < ApplicationController
     user_id = session[:user_id];
     session[:user_id] = nil
     redirect_to_index_with_status_msg('Logged out user with id ' + user_id.to_s)
+
+    # TODO For native clients need to invalidate the auth token
+
   end
 
   # Logs in as a user
@@ -333,7 +319,8 @@ class UserController < ApplicationController
       end
     else
       if from_native_client(request)
-        success_with_json_msg(user.to_json)
+        auth_token = AuthToken.generate_token(user)
+        success_with_json_msg(user.as_json(nil, auth_token.auth_token))
       else
         redirect_to_index_with_status_msg('Logged in successfully')
       end

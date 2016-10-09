@@ -63,7 +63,7 @@ class PatchController < ApplicationController
   def get_user_from_params(caller, request, params, fail_quietly = false)
     if from_native_client(request)
       # Native clients: this will return nil if we cannot find the user OR the password is incorrect
-      current_user = User.get_user_with_verification(params[:username], params[:email], params[:password])
+      current_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
     else
       # Web clients: we know they are authenticated if session[:user_id] exists
       current_user = User.get_user(id: session[:user_id])
@@ -242,7 +242,7 @@ class PatchController < ApplicationController
       return
     end
 
-    patch.to_json
+    success_with_json_msg(patch.to_json)
   end
 
   # Returns patches for the logged in user in JSON format

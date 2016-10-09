@@ -8,9 +8,9 @@ require 'json'
 require 'sendgrid-ruby'
 require 'strong_password'
 
+require './models/auth_token'
 require './models/patch'
 require './models/user'
-
 
 include SendGrid
 
