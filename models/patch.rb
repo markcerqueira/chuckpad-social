@@ -40,6 +40,7 @@ class Patch < ActiveRecord::Base
         'created_at' => created_at.strftime('%Y-%m-%d %H:%M:%S'), # http://stackoverflow.com/a/9132422/265791
         'updated_at' => updated_at.strftime('%Y-%m-%d %H:%M:%S'),
         'download_count' => download_count,
+        'abuse_count' => abuse_count,
         'resource' => '/patch/download/' + id.to_s
     }
   end

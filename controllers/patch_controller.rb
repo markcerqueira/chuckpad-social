@@ -335,4 +335,63 @@ class PatchController < ApplicationController
     end
   end
 
+  # Toggle report abuse for a patch
+  post '/report/:id/?' do
+    log('report', params)
+
+    # User must be logged in to report an abusive patch
+    current_user, error = get_user_from_params('report', request, params)
+    if error
+      log('report', 'get_user call had an error')
+      return
+    end
+
+    patch = Patch.find_by_id(params[:id])
+
+    # This can happen if a user is reporting a patch that was deleted
+    if patch.nil?
+      if from_native_client(request)
+        success_with_json_msg('Patch has already been deleted by creator')
+      else
+        redirect_to_index_with_status_msg('Patch has already been deleted by creator')
+      end
+    end
+
+    # See if a AbuseReport record already exists
+    abuse_report = AbuseReport.where(patch_id: patch.id, user_id: current_user.id).first
+
+    if abuse_report.nil? && params[:is_abuse]
+      log('report', "reporting patch with id #{patch.id}")
+      abuse_report = AbuseReport.new do |r|
+        r.user_id = current_user.id
+        r.patch_id = patch.id
+      end
+
+      patch.abuse_count = patch.abuse_count + 1
+
+      abuse_report.save
+      patch.save
+
+      return_string = 'Patch abuse report received'
+    elsif !abuse_report.nil? && !params[:is_abuse]
+      log('report', "rescinding report for patch with id #{patch.id}")
+      abuse_report.delete
+
+      patch.abuse_count = patch.abuse_count - 1
+      patch.save
+
+      return_string = 'Patch abuse report undone'
+    else
+      # Client and server state are somehow inconsistent
+      log('report', 'No valid branches to handle report abuse')
+      return_string = 'Patch report received'
+    end
+
+    if from_native_client(request)
+      success_with_json_msg(return_string)
+    else
+      redirect_to_index_with_status_msg(return_string)
+    end
+  end
+
 end

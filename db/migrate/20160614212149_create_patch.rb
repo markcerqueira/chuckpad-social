@@ -15,6 +15,7 @@ class CreatePatch < ActiveRecord::Migration
       t.integer :parent_id, :default => -1
 
       t.integer :download_count, :default => 0
+      t.integer :abuse_count, :default => 0
 
       t.integer :revision, :default => 0
 
