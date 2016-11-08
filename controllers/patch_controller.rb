@@ -359,8 +359,8 @@ class PatchController < ApplicationController
 
     # See if a AbuseReport record already exists
     abuse_report = AbuseReport.where(patch_id: patch.id, user_id: current_user.id).first
-
-    if abuse_report.nil? && params[:is_abuse]
+    
+    if abuse_report.nil? && params[:is_abuse] == "1"
       log('report', "reporting patch with id #{patch.id}")
       abuse_report = AbuseReport.new do |r|
         r.user_id = current_user.id
@@ -373,7 +373,7 @@ class PatchController < ApplicationController
       patch.save
 
       return_string = 'Patch abuse report received'
-    elsif !abuse_report.nil? && !params[:is_abuse]
+    elsif abuse_report.present? && params[:is_abuse] != "1"
       log('report', "rescinding report for patch with id #{patch.id}")
       abuse_report.delete
 
