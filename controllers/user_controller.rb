@@ -244,15 +244,25 @@ class UserController < ApplicationController
     end
   end
 
-  # Clears session cookie
-  get '/logout/:id/?' do
+  # Clears session cookie (web) or invalidates auth token (native clients)
+  post '/logout/?' do
     log('logout', params)
-    user_id = session[:user_id];
-    session[:user_id] = nil
-    redirect_to_index_with_status_msg('Logged out user with id ' + user_id.to_s)
 
-    # TODO For native clients need to invalidate the auth token
+    # Logging out on web
+    unless from_native_client(request)
+      user_id = session[:user_id]
+      session[:user_id] = nil
+      redirect_to_index_with_status_msg('Logged out user with id ' + user_id.to_s)
+    end
 
+    # Logging out on native clients
+    token_invalidated = AuthToken.invalidate_token(params[:username], params[:email], params[:auth_token])
+
+    if token_invalidated
+      success_with_json_msg('Successfully logged out')
+    else
+      fail_with_json_msg(500, 'Unable to log user out')
+    end
   end
 
   # Logs in as a user
