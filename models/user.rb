@@ -7,12 +7,6 @@ class User < ActiveRecord::Base
   MIN_USERNAME_LENGTH = 2
   MAX_USERNAME_LENGTH = 20
 
-  # Helper logging method
-  def self.log(method, o)
-    # TODO
-    # shared_log('User', method, o)
-  end
-
   # Find a user by id, username, or email. If multiple params are passed
   # they will search in order declared (e.g. search by id first, username
   # second, email third, confirm_token fourth).
@@ -49,18 +43,18 @@ class User < ActiveRecord::Base
   # Simple password checker to make sure password is not equal to username and not weak
   def self.is_password_weak(caller, username, password)
     if password.nil? || password.length == 0
-      log(caller, 'password is empty')
+      LogHelper.user_log(caller, 'password is empty')
       return true
     end
 
     if !username.nil? && (password.eql? username)
-      log(caller, 'password is the same as username')
+      LogHelper.user_log(caller, 'password is the same as username')
       return true
     end
 
     password_entropy = StrongPassword::StrengthChecker.new(password).calculate_entropy
 
-    log(caller, 'password.length = ' + password.length.to_s + '; password_entropy = '+  password_entropy.to_s)
+    LogHelper.user_log(caller, 'password.length = ' + password.length.to_s + '; password_entropy = '+  password_entropy.to_s)
 
     return password_entropy.to_i < MIN_PASSWORD_ENTROPY
   end

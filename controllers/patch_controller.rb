@@ -8,11 +8,6 @@ class PatchController < ApplicationController
   # Used by /patches/new
   RECENT_PATCHES_TO_RETURN = 20;
 
-  # Helper logging method
-  def log(method, o)
-    shared_log('PatchController', method, o)
-  end
-
   # Redirects to '/patch' with message
   def redirect_to_index_with_status_msg(msg)
     redirect_with_status_message(msg, '/patch')
@@ -43,7 +38,7 @@ class PatchController < ApplicationController
   def get_patch(caller, request, patch_id, fail_quietly = false)
     patch = Patch.find_by_id(patch_id)
     if patch.nil?
-      log(caller, 'No patch found')
+      LogHelper.patch_controller_log(caller, 'No patch found')
 
       unless fail_quietly
         if from_native_client(request)
@@ -70,7 +65,7 @@ class PatchController < ApplicationController
     end
 
     if current_user.nil?
-      log(caller, 'No valid user found and fail_quietly = ' + fail_quietly.to_s)
+      LogHelper.patch_controller_log(caller, 'No valid user found and fail_quietly = ' + fail_quietly.to_s)
       unless fail_quietly
         if from_native_client(request)
           fail_with_json_msg(500, 'This call requires a logged in user')
@@ -91,18 +86,18 @@ class PatchController < ApplicationController
   def get_user_authenticated_and_modifiable_patch(caller, request, params, fail_quietly = false)
     patch, error = get_patch(caller, request, params[:id], fail_quietly)
     if error
-      log(caller, 'get_patch call had an error')
+      LogHelper.patch_controller_log(caller, 'get_patch call had an error')
       return nil, true
     end
 
     current_user, error = get_user_from_params(caller, request, params, fail_quietly)
     if error
-      log(caller, 'get_user call had an error')
+      LogHelper.patch_controller_log(caller, 'get_user call had an error')
       return nil, true
     end
 
     unless user_can_modify_patch(caller, request, current_user, patch, fail_quietly)
-      log(caller, 'user_can_modify_patch call had an error')
+      LogHelper.patch_controller_log(caller, 'user_can_modify_patch call had an error')
       return nil, true
     end
 
@@ -111,7 +106,7 @@ class PatchController < ApplicationController
 
   # Index page that shows index.erb and lists all patches
   get '/' do
-    log('', nil)
+    LogHelper.patch_controller_log('', nil)
     @latest_status_message = session[:status]
     @patches = Patch.order('id DESC').all
     @logged_in_user = User.get_user(id: session[:user_id])
@@ -120,18 +115,18 @@ class PatchController < ApplicationController
 
   # Creates a new patch
   post '/create_patch/?' do
-    log('/create_patch', params)
+    LogHelper.patch_controller_log('/create_patch', params)
 
     # User must be logged in to create a patch
     current_user, error = get_user_from_params('/create_patch', request, params)
     if error
-      log('/create_patch', 'get_user call had an error')
+      LogHelper.patch_controller_log('/create_patch', 'get_user call had an error')
       return
     end
 
     # Make sure file is below file size limit
     if File.size(params[:patch][:data][:tempfile]) > TEN_KB_IN_BYTES
-      log('/create_patch', 'File size too large')
+      LogHelper.patch_controller_log('/create_patch', 'File size too large')
       if from_native_client(request)
         fail_with_json_msg(500, 'File size is too large')
         return
@@ -185,13 +180,13 @@ class PatchController < ApplicationController
   # Updates an existing patch. Supports updating data file, name of the patch, and visibility. Revision is
   # incremented when an update occurs.
   post '/update/?' do
-    log('update', nil)
+    LogHelper.patch_controller_log('update', nil)
 
     params[:id] = params[:patch][:id]
 
     patch, error = get_user_authenticated_and_modifiable_patch('/update', request, params)
     if error
-      log('/toggle_hidden', 'get_user_authenticated_and_modifiable_patch call had an error')
+      LogHelper.patch_controller_log('/toggle_hidden', 'get_user_authenticated_and_modifiable_patch call had an error')
       return
     end
 
@@ -238,7 +233,7 @@ class PatchController < ApplicationController
   get '/info/:id/?' do
     patch, error = get_patch('/json/info', request, params[:id])
     if error
-      log('/json/info', 'get_patch call had an error')
+      LogHelper.patch_controller_log('/json/info', 'get_patch call had an error')
       return
     end
 
@@ -249,7 +244,7 @@ class PatchController < ApplicationController
   get '/my/?' do
     current_user, error = get_user_from_params('/my', request, params, false)
     if error
-      log('/my', 'get_user call had an error')
+      LogHelper.patch_controller_log('/my', 'get_user call had an error')
       return
     end
 
@@ -260,7 +255,7 @@ class PatchController < ApplicationController
   # If the id requested belongs to the user making the request, hidden patches will be returned;
   # otherwise only non-hidden patches will be returned
   get '/user/:id/?' do
-    log('user', nil)
+    LogHelper.patch_controller_log('user', nil)
     content_type 'text/json'
 
     show_hidden = false
@@ -280,21 +275,21 @@ class PatchController < ApplicationController
 
   # Returns recently created patches
   get '/new/?' do
-    log('new', nil)
+    LogHelper.patch_controller_log('new', nil)
     content_type 'text/json'
     success_with_json_msg(Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
   end
 
   # Returns all (non-hidden) featured patches as a JSON list
   get '/featured/?' do
-    log('featured', nil)
+    LogHelper.patch_controller_log('featured', nil)
     content_type 'text/json'
     success_with_json_msg(Patch.visible_featured.to_json)
   end
 
   # Returns all (non-hidden) documentation patches as a JSON list
   get '/documentation/?' do
-    log('documentation', nil)
+    LogHelper.patch_controller_log('documentation', nil)
     content_type 'text/json'
     success_with_json_msg(Patch.visible_documentation.to_json)
   end
@@ -303,7 +298,7 @@ class PatchController < ApplicationController
   get '/download/:id/?' do
     patch, error = get_patch('/download', request, params[:id])
     if error
-      log('download', 'get_patch call had an error')
+      LogHelper.patch_controller_log('download', 'get_patch call had an error')
       return
     end
 
@@ -318,11 +313,11 @@ class PatchController < ApplicationController
 
   # Deletes patch for given patch id
   get '/delete/:id/?' do
-    log('delete', nil)
+    LogHelper.patch_controller_log('delete', nil)
 
     patch, error = get_user_authenticated_and_modifiable_patch('/delete', request, params)
     if error
-      log('/delete', 'get_user_authenticated_and_modifiable_patch call had an error')
+      LogHelper.patch_controller_log('/delete', 'get_user_authenticated_and_modifiable_patch call had an error')
       return
     end
 
@@ -337,12 +332,12 @@ class PatchController < ApplicationController
 
   # Toggle report abuse for a patch
   post '/report/:id/?' do
-    log('report', params)
+    LogHelper.patch_controller_log('report', params)
 
     # User must be logged in to report an abusive patch
     current_user, error = get_user_from_params('report', request, params)
     if error
-      log('report', 'get_user call had an error')
+      LogHelper.patch_controller_log('report', 'get_user call had an error')
       return
     end
 
@@ -361,7 +356,7 @@ class PatchController < ApplicationController
     abuse_report = AbuseReport.where(patch_id: patch.id, user_id: current_user.id).first
     
     if abuse_report.nil? && params[:is_abuse] == "1"
-      log('report', "reporting patch with id #{patch.id}")
+      LogHelper.patch_controller_log('report', "reporting patch with id #{patch.id}")
       abuse_report = AbuseReport.new do |r|
         r.user_id = current_user.id
         r.patch_id = patch.id
@@ -374,7 +369,7 @@ class PatchController < ApplicationController
 
       return_string = 'Patch abuse report received'
     elsif abuse_report.present? && params[:is_abuse] != "1"
-      log('report', "rescinding report for patch with id #{patch.id}")
+      LogHelper.patch_controller_log('report', "rescinding report for patch with id #{patch.id}")
       abuse_report.delete
 
       patch.abuse_count = patch.abuse_count - 1
@@ -383,7 +378,7 @@ class PatchController < ApplicationController
       return_string = 'Patch abuse report undone'
     else
       # Client and server state are somehow inconsistent
-      log('report', 'No valid branches to handle report abuse')
+      LogHelper.patch_controller_log('report', 'No valid branches to handle report abuse')
       return_string = 'Patch report received'
     end
 

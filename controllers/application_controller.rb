@@ -13,6 +13,7 @@ require './models/auth_token'
 require './models/patch'
 require './models/user'
 
+require './modules/log_helper'
 require './modules/mail_helper'
 
 class ApplicationController < Sinatra::Base
@@ -39,15 +40,6 @@ class ApplicationController < Sinatra::Base
       :path => '/',
       :expire_after => 2592000, # 30 days in seconds
       :secret => ENV['RACK_COOKIE_SECRET'].to_s
-
-  # Shared logging function for standardized logging to the console
-  def shared_log(controller, method, o)
-    str = controller + '/' + method
-    if not o.nil?
-      str += ' - ' + o.to_s
-    end
-    puts str
-  end
 
   # Returns true if the request is being made from a "native" (e.g. iOS) client
   def from_native_client(request)
