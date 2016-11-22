@@ -46,8 +46,6 @@ class UserController < ApplicationController
       base_url = request.base_url
     end
 
-    log('send_confirmation_email', base_url)
-
     subject = 'Welcome to ChuckPad!'
     html_body = erb :welcome_email, locals: { username: user.username, confirm_link: base_url.to_s + '/user/confirm/' + user.confirm_token }
 

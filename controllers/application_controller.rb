@@ -13,40 +13,11 @@ require './models/auth_token'
 require './models/patch'
 require './models/user'
 
-include SendGrid
-
-module MailHelper
-
-  # Helper method to send someone an email
-  def self.send_email(to_field, subject_text, html_body_text)
-    sendgrid_api_key = ENV['SENDGRID_API_KEY']
-    if sendgrid_api_key.nil? or sendgrid_api_key.empty?
-      puts 'send_email - SendGrid API key is not configured so cannot send email'
-      return
-    end
-
-    begin
-      from = Email.new(email: ENV['EMAIL_FROM_ADDRESS'].to_s, name: ENV['EMAIL_FROM_NAME'].to_s)
-      to = Email.new(email: to_field)
-      subject = subject_text
-      content = Content.new(type: 'text/html', value: html_body_text)
-      mail = Mail.new(from, subject, to, content)
-
-      sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
-      response = sg.client.mail._('send').post(request_body: mail.to_json)
-      puts response.status_code.to_s + ', ' + response.body.to_s + ', ' + response.headers.to_s
-    rescue Exception => e
-      puts "send_email - exception thrown: #{e.message}"
-    end
-  end
-
-end
+require './modules/mail_helper'
 
 class ApplicationController < Sinatra::Base
 
   CHUCKPAD_SOCIAL_IOS = 'chuckpad-social-ios'
-
-  helpers MailHelper
 
   # Tell Sinatra about special MIME types
   # http://stackoverflow.com/a/18574464/265791
@@ -113,21 +84,6 @@ class ApplicationController < Sinatra::Base
   # Main index page for app will route to the patches index page at erb :index
   get '/?' do
     redirect '/patch'
-  end
-
-  # A certain reviewer of an app that may be using this API may not like it if the app could download and execute code.
-  # If this API does not return true, clients should NOT attempt to make any other API requests.
-  get '/enabled/?' do
-    # Update this to include all versions of the app that are released but NOT in review!
-    supported_lib_versions = ['0.1']
-
-    if from_native_client(request)
-      enabled = supported_lib_versions.include? params[:version]
-    else
-      enabled = true
-    end
-
-    enabled ? success_with_json_msg('') : fail_with_json_msg(500, '')
   end
 
   after do
