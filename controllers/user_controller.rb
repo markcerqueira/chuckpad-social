@@ -14,6 +14,85 @@ class UserController < ApplicationController
     erb :user
   end
 
+  # Renders landing page for changing password
+  get '/password/confirm/?' do
+    password_reset_token = PasswordResetToken.find_by_reset_token(params[:token])
+
+    # Token in params is not valid, user ids do not match, or token has expired. Abort!
+    if password_reset_token.nil? || password_reset_token.user_id.to_s != params[:id].to_s || password_reset_token.expire_time < DateTime.now
+      @invalid_token = true
+    end
+
+    unless @invalid_token
+      puts params
+      @user_id = params[:id]
+      @token = params[:token]
+    end
+
+    erb :password
+  end
+
+  # Finishes the change password flow
+  post '/password/finalize/?' do
+    puts params
+
+    # TODO Why are hidden field variables getting a trailing `/` attached to them?
+    password_reset_token = PasswordResetToken.find_by_reset_token(params[:token].chomp('/'))
+
+    # Token in params is not valid, user ids do not match, or token has expired. Abort!
+    if password_reset_token.nil? || password_reset_token.user_id.to_s != params[:user_id].chomp('/').to_s || password_reset_token.expire_time < DateTime.now
+      @invalid_after_finalize = true
+    end
+
+    unless @invalid_after_finalize
+      user = User.get_user(id: params[:user_id].chomp('/'))
+      new_password = params[:new_password]
+      new_password.strip!
+
+      # TODO Weak password validation
+      user.salt = BCrypt::Engine.generate_salt
+      user.password_hash = BCrypt::Engine.hash_secret(new_password, user.salt)
+
+      user.save
+      password_reset_token.delete
+
+      @change_password_complete = true
+    end
+
+    erb :password
+  end
+
+  # Request a password reset
+  post '/password/reset/?' do
+    username_or_email = params[:username_or_email]
+    username_or_email.strip
+
+    user = User.get_user(username: username_or_email, email: username_or_email)
+
+    if user.nil?
+      LogHelper.user_controller_log('/password/reset', 'No user found')
+      fail_with_json_msg(500, 'No user was found with that username or email. Please try again.')
+      return
+    end
+
+    password_reset_token = PasswordResetToken.generate_token(user)
+
+    if request.nil?
+      base_url = 'https://chuckpad-social.herokuapp.com'
+    else
+      base_url = request.base_url
+    end
+
+    subject = 'Reset your ChuckPad password'
+    html_body = erb :password_reset_email, locals: { username: user.username,
+                                                     reset_link: base_url.to_s + 'user/password/confirm/?token=' + password_reset_token.reset_token + '&id=' + password_reset_token.user_id.to_s,
+                                                     expire_time: PasswordResetToken::TOKEN_EXPIRATION_TIME_MINUTES.to_s }
+
+    MailHelper.send_email(user.email, subject, html_body)
+
+    success_with_json_msg('Password reset sent via email.')
+  end
+
   def is_user_logged_in
     return session.has_key?('user_id')
   end
