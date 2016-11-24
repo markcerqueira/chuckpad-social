@@ -142,7 +142,7 @@ class PatchController < ApplicationController
       p.documentation = params[:patch].has_key?('documentation')
       p.hidden = params[:patch].has_key?('hidden')
       p.description = params[:patch][:description]
-      p.parent_id = params[:patch][:parent_id]
+      p.parent_id = (params[:patch][:parent_id] || -1)
       p.data = params[:patch][:data][:tempfile].read
       p.filename = params[:patch][:data][:filename]
       p.creator_id = current_user.id
