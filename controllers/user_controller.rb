@@ -84,9 +84,11 @@ class UserController < ApplicationController
     end
 
     subject = 'Reset your ChuckPad password'
-    html_body = erb :password_reset_email, locals: { username: user.username,
-                                                     reset_link: base_url.to_s + 'user/password/confirm/?token=' + password_reset_token.reset_token + '&id=' + password_reset_token.user_id.to_s,
-                                                     expire_time: PasswordResetToken::TOKEN_EXPIRATION_TIME_MINUTES.to_s }
+    html_body = erb :'emails/password_reset_email', locals: {
+        username: user.username,
+        reset_link: base_url.to_s + 'user/password/confirm/?token=' + password_reset_token.reset_token + '&id=' + password_reset_token.user_id.to_s,
+        expire_time: PasswordResetToken::TOKEN_EXPIRATION_TIME_MINUTES.to_s
+    }
 
     MailHelper.send_email(user.email, subject, html_body)
 
@@ -121,7 +123,10 @@ class UserController < ApplicationController
     end
 
     subject = 'Welcome to ChuckPad!'
-    html_body = erb :welcome_email, locals: { username: user.username, confirm_link: base_url.to_s + '/user/confirm/' + user.confirm_token }
+    html_body = erb :'emails/welcome_email', locals: {
+        username: user.username,
+        confirm_link: base_url.to_s + '/user/confirm/' + user.confirm_token
+    }
 
     MailHelper.send_email(user.email, subject, html_body)
 
