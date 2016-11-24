@@ -6,6 +6,10 @@ class CreatePatch < ActiveRecord::Migration
       t.string :name, :null => false
       t.string :description, :null => false
 
+      # Different clients (e.g. MiniAudicle, Auraglyph) use this service so differentiate the patches
+      # Mapping of client to integer is in the model class patch.rb
+      t.integer :patch_type
+
       t.boolean :hidden, :default => false
       t.boolean :featured, :default => false
       t.boolean :documentation, :default => false

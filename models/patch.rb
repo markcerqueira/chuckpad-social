@@ -1,6 +1,9 @@
 class Patch < ActiveRecord::Base
   belongs_to :creator, class_name: 'User'
 
+  MINI_AUDICLE_TYPE = 1
+  AURAGLYPH_TYPE = 2
+
   scope :hidden, -> { where(hidden: true) }
   scope :visible, -> { where(hidden: false) }
 
@@ -11,6 +14,9 @@ class Patch < ActiveRecord::Base
   scope :featured, -> { where(featured: true) }
   scope :visible_featured, -> { self.featured.visible }
   scope :hidden_featured, -> { self.featured.hidden }
+
+  scope :mini_audicle, -> { where(type: MINI_AUDICLE_TYPE) }
+  scope :auraglyph, -> { where(type: AURAGLYPH_TYPE) }
 
   # Converts patch to json using to_hash method
   def as_json(options)

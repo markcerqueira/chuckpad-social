@@ -138,6 +138,7 @@ class PatchController < ApplicationController
     # Create patch
     patch = Patch.new do |p|
       p.name = params[:patch][:name]
+      p.patch_type = params[:patch][:type].to_i
       p.featured = params[:patch].has_key?('featured')
       p.documentation = params[:patch].has_key?('documentation')
       p.hidden = params[:patch].has_key?('hidden')
@@ -248,7 +249,7 @@ class PatchController < ApplicationController
       return
     end
 
-    success_with_json_msg(Patch.where(creator_id: current_user.id).to_json)
+    success_with_json_msg(Patch.where(creator_id: current_user.id, patch_type: params[:type].to_i).to_json)
   end
 
   # Returns patches for the given user in JSON format
@@ -277,21 +278,21 @@ class PatchController < ApplicationController
   get '/new/?' do
     LogHelper.patch_controller_log('new', nil)
     content_type 'text/json'
-    success_with_json_msg(Patch.visible.order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
+    success_with_json_msg(Patch.where(patch_type: params[:type].to_i, hidden: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
   end
 
   # Returns all (non-hidden) featured patches as a JSON list
   get '/featured/?' do
     LogHelper.patch_controller_log('featured', nil)
     content_type 'text/json'
-    success_with_json_msg(Patch.visible_featured.to_json)
+    success_with_json_msg(Patch.where(patch_type: params[:type].to_i, hidden: false, featured: true).to_json)
   end
 
   # Returns all (non-hidden) documentation patches as a JSON list
   get '/documentation/?' do
     LogHelper.patch_controller_log('documentation', nil)
     content_type 'text/json'
-    success_with_json_msg(Patch.visible_documentation.to_json)
+    success_with_json_msg(Patch.where(patch_type: params[:type].to_i, hidden: false, documentation: true).to_json)
   end
 
   # Downloads patch file for given patch id
