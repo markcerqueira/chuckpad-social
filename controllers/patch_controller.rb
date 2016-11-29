@@ -8,11 +8,6 @@ class PatchController < ApplicationController
   # Used by /patches/new
   RECENT_PATCHES_TO_RETURN = 20;
 
-  # Redirects to '/patch' with message
-  def redirect_to_index_with_status_msg(msg)
-    redirect_with_status_message(msg, '/patch')
-  end
-
   # Returns true if the passed user has permissions to modify the patch
   def user_can_modify_patch(caller, request, current_user, patch, fail_quietly = false)
     if current_user.admin
@@ -24,11 +19,7 @@ class PatchController < ApplicationController
     end
 
     unless fail_quietly
-      if from_native_client(request)
-        fail_with_json_msg(500, 'User does not have permission to modify patch with id ' + patch.id.to_s)
-      else
-        redirect_to_index_with_status_msg('User does not have permission to modify patch with id ' + patch.id.to_s)
-      end
+      ResponseHelper.error(self, request, 'User does not have permission to modify patch with id ' + patch.id.to_s)
     end
 
     return false
@@ -39,13 +30,8 @@ class PatchController < ApplicationController
     patch = Patch.find_by_id(patch_id)
     if patch.nil?
       LogHelper.patch_controller_log(caller, 'No patch found')
-
       unless fail_quietly
-        if from_native_client(request)
-          fail_with_json_msg(500, 'Unable to find patch with id ' + params[:id].to_s)
-        else
-          redirect_to_index_with_status_msg('Unable to find patch with id ' + params[:id].to_s)
-        end
+        ResponseHelper.error(self, request, 'Unable to find patch with id ' + params[:id].to_s)
       end
 
       return nil, true
@@ -56,29 +42,29 @@ class PatchController < ApplicationController
 
   # Gets user supporting both web and iOS-based queries
   def get_user_from_params(caller, request, params, fail_quietly = false)
-    if from_native_client(request)
-      # Native clients: this will return nil if we cannot find the user OR the password is incorrect
-      current_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
-    else
-      # Web clients: we know they are authenticated if session[:user_id] exists
-      current_user = User.get_user(id: session[:user_id])
-    end
-
-    if current_user.nil?
+    begin
+      if from_native_client(request)
+        # Native clients: this will throw a UserNotFoundError/AuthTokenInvalidError if we can't find user or auth token is invalid
+        current_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
+      else
+        # Web clients: we know they are authenticated if session[:user_id] exists
+        current_user = User.get_user(id: session[:user_id])
+      end
+      return current_user, false
+    rescue UserNotFoundError
       LogHelper.patch_controller_log(caller, 'No valid user found and fail_quietly = ' + fail_quietly.to_s)
       unless fail_quietly
-        if from_native_client(request)
-          fail_with_json_msg(500, 'This call requires a logged in user')
-        else
-          redirect_to_index_with_status_msg('This call requires a logged in user')
-        end
+        ResponseHelper.error(self, request, 'This call requires a logged in user')
       end
-
-      # nil = no (validated) user found, true = found an error
-      return nil, true
+    rescue AuthTokenInvalidError
+      LogHelper.patch_controller_log(caller, 'Invalid auth token found and fail_quietly = ' + fail_quietly.to_s)
+      unless fail_quietly
+        ResponseHelper.auth_error(self, request, 'Your auth token is invalid. Please log in again.')
+      end
     end
 
-    return current_user, false
+    # nil = no (validated) user found, true = found an error
+    return nil, true
   end
 
   # Returns a patch and false if an authenticated user is found and has permission to modify a patch
@@ -109,7 +95,13 @@ class PatchController < ApplicationController
     LogHelper.patch_controller_log('', nil)
     @latest_status_message = session[:status]
     @patches = Patch.order('id DESC').all
-    @logged_in_user = User.get_user(id: session[:user_id])
+
+    begin
+      @logged_in_user = User.get_user(id: session[:user_id])
+    rescue UserNotFoundError
+      # Do nothing
+    end
+
     erb :index
   end
 
@@ -127,12 +119,8 @@ class PatchController < ApplicationController
     # Make sure file is below file size limit
     if File.size(params[:patch][:data][:tempfile]) > TEN_KB_IN_BYTES
       LogHelper.patch_controller_log('/create_patch', 'File size too large')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'File size is too large')
-        return
-      else
-        redirect_to_index_with_status_msg('Error! File size is too large!')
-      end
+      ResponseHelper.error(self, request, 'File size is too large')
+      return
     end
 
     # Create patch
@@ -163,18 +151,9 @@ class PatchController < ApplicationController
 
     # Save patch
     if patch.save
-      if from_native_client(request)
-        success_with_json_msg(patch.to_json)
-      else
-        redirect_to_index_with_status_msg('Patch created with id = ' + patch.id.to_s)
-      end
+      ResponseHelper.success(self, request, patch.to_json, 'Patch created with id = ' + patch.id.to_s)
     else
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Error saving patch file')
-        return
-      else
-        redirect_to_index_with_status_msg('There was an error saving the patch')
-      end
+      ResponseHelper.error(self, request, 'Error saving the patch. Please try again.')
     end
   end
 
@@ -223,11 +202,7 @@ class PatchController < ApplicationController
     end
 
     # TODO Switch on if a change was made?
-    if from_native_client(request)
-      success_with_json_msg(patch.to_json)
-    else
-      redirect_to_index_with_status_msg('Updated patch with id ' + params[:id].to_s)
-    end
+    ResponseHelper.success(self, request, patch.to_json, 'Updated patch with id ' + params[:id].to_s)
   end
 
   # Returns information for patch with parameter id in JSON format
@@ -238,7 +213,7 @@ class PatchController < ApplicationController
       return
     end
 
-    success_with_json_msg(patch.to_json)
+    ResponseHelper.success_with_json_msg(self, patch.to_json)
   end
 
   # Returns patches for the logged in user in JSON format
@@ -249,7 +224,7 @@ class PatchController < ApplicationController
       return
     end
 
-    success_with_json_msg(Patch.where(creator_id: current_user.id, patch_type: params[:type].to_i).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(creator_id: current_user.id, patch_type: params[:type].to_i).to_json)
   end
 
   # Returns patches for the given user in JSON format
@@ -257,7 +232,6 @@ class PatchController < ApplicationController
   # otherwise only non-hidden patches will be returned
   get '/user/:id/?' do
     LogHelper.patch_controller_log('user', nil)
-    content_type 'text/json'
 
     show_hidden = false
     current_user, error = get_user_from_params('user', request, params, true)
@@ -271,28 +245,25 @@ class PatchController < ApplicationController
       patches.visible
     end
 
-    success_with_json_msg(patches.order('id DESC').to_json)
+    ResponseHelper.success_with_json_msg(self, patches.order('id DESC').to_json)
   end
 
   # Returns recently created patches
   get '/new/?' do
     LogHelper.patch_controller_log('new', nil)
-    content_type 'text/json'
-    success_with_json_msg(Patch.where(patch_type: params[:type].to_i, hidden: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
   end
 
   # Returns all (non-hidden) featured patches as a JSON list
   get '/featured/?' do
     LogHelper.patch_controller_log('featured', nil)
-    content_type 'text/json'
-    success_with_json_msg(Patch.where(patch_type: params[:type].to_i, hidden: false, featured: true).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, featured: true).to_json)
   end
 
   # Returns all (non-hidden) documentation patches as a JSON list
   get '/documentation/?' do
     LogHelper.patch_controller_log('documentation', nil)
-    content_type 'text/json'
-    success_with_json_msg(Patch.where(patch_type: params[:type].to_i, hidden: false, documentation: true).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, documentation: true).to_json)
   end
 
   # Downloads patch file for given patch id
@@ -324,11 +295,7 @@ class PatchController < ApplicationController
 
     patch.delete
 
-    if from_native_client(request)
-      success_with_json_msg('Successfully deleted patch')
-    else
-      redirect_to_index_with_status_msg('Deleted patch with id ' + params[:id].to_s)
-    end
+    ResponseHelper.success(self, request, 'Successfully deleted patch')
   end
 
   # Toggle report abuse for a patch
@@ -346,11 +313,8 @@ class PatchController < ApplicationController
 
     # This can happen if a user is reporting a patch that was deleted
     if patch.nil?
-      if from_native_client(request)
-        success_with_json_msg('Patch has already been deleted by creator')
-      else
-        redirect_to_index_with_status_msg('Patch has already been deleted by creator')
-      end
+      ResponseHelper.success(self, request, 'Patch has already been deleted by creator')
+      return
     end
 
     # See if a AbuseReport record already exists
@@ -383,11 +347,7 @@ class PatchController < ApplicationController
       return_string = 'Patch report received'
     end
 
-    if from_native_client(request)
-      success_with_json_msg(return_string)
-    else
-      redirect_to_index_with_status_msg(return_string)
-    end
+    ResponseHelper.success(self, request, return_string)
   end
 
 end

@@ -15,6 +15,10 @@ require './models/user'
 
 require './modules/log_helper'
 require './modules/mail_helper'
+require './modules/response_helper'
+
+require './errors/auth_token_invalid_error'
+require './errors/user_not_found_error'
 
 class ApplicationController < Sinatra::Base
 
@@ -46,31 +50,28 @@ class ApplicationController < Sinatra::Base
     return request.user_agent.include? CHUCKPAD_SOCIAL_IOS
   end
 
-  def fail_with_json_msg(code, msg)
-    # We want the HTTP request to succeed so set it to 200
-    # Code internally will be non-200 in this case
+  def respond(code, msg)
+    # Even for errors we want the HTTP request to succeed so set it this status to 200. If there are other errors we
+    # will set them internally in the JSON.
     status 200
     content_type 'text/json'
-    body get_response_body(code, msg)
-  end
 
-  def success_with_json_msg(msg)
-    status 200
-    content_type 'text/json'
-    body get_response_body(200, msg)
-  end
-
-  def get_response_body(code, msg)
-    {
+    response_body = {
         'code' => code,
         'message' => msg
     }.to_json
+
+    body response_body
   end
 
   # Redirects to target page setting status message to passed msg
-  def redirect_with_status_message(msg, target)
+  def redirect_to_index_with_status_msg(controller, msg)
     session[:status] = msg
-    redirect target
+    if controller.is_a?(UserController)
+      redirect '/user'
+    else
+      redirect '/patch'
+    end
   end
 
   # Main index page for app will route to the patches index page at erb :index

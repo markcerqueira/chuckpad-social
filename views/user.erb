@@ -94,7 +94,7 @@
     <!-- <th>Email</th> -->
     <th>Admin</th>
     <th>Email Confirmed</th>
-    <th>Patch Count (All / Visible / Hidden)</th>
+    <th>Patch Count (All / Visible)</th>
     <th>Actions</th>
     </thead>
     <tbody>
@@ -105,7 +105,7 @@
           <!-- <td><%= user.email %></td> -->
           <td><%= user.admin %></td>
           <td><%= user.email_confirmed %></td>
-          <td><%= user.get_patch_count %></td>
+          <td><%= "#{user.patches.count}/#{user.patches.visible.count}" %></td>
           <td><a href='patch/user/<%= user.id %>'>Patch List</a></td>
         </tr>
     <% end %>

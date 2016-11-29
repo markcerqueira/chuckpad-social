@@ -10,34 +10,42 @@ class User < ActiveRecord::Base
   # Find a user by id, username, or email. If multiple params are passed
   # they will search in order declared (e.g. search by id first, username
   # second, email third, confirm_token fourth).
+  #
+  # Throws: UserNotFoundError
   def self.get_user(id: -1, username: nil, email: nil, confirm_token: nil)
-    (User.find_by_id(id) if id != -1) ||
-    (User.find_by_username(username) if username.present?) ||
-    (User.find_by_email(email) if email.present?) ||
-    (User.find_by_confirm_token(confirm_token) if confirm_token.present?)
+    user = (User.find_by_id(id) if id != -1) || (User.find_by_username(username) if username.present?) ||
+           (User.find_by_email(email) if email.present?) || (User.find_by_confirm_token(confirm_token) if confirm_token.present?)
+
+    if user.nil?
+      raise UserNotFoundError
+    else
+      return user
+    end
   end
 
   # Finds user by username or email (using logic in get_user function) and
   # then verifies that the provided auth_token is valid. If the user is not
   # found or the auth_token is not found, nil is returned.
+  #
+  # Throws: UserNotFoundError, AuthTokenInvalidError
   def self.get_user_with_verification(username, email, auth_token)
+    # This can throw a UserNotFoundError
     user = get_user(username: username, email: email)
-    authToken = AuthToken.find_by_auth_token(auth_token)
 
-    # TODO If user is found but auth token is not, we may have invalidated it so we need to inform caller
-    if !user.nil? && !authToken.nil? && user.id == authToken.user_id
+    authToken = AuthToken.find_by_auth_token(auth_token)
+    if !authToken.nil? && user.id == authToken.user_id
       authToken.last_access = DateTime.now
       authToken.save
-
       return user
     end
 
-    return nil
+    # If user is found but auth token is not, we may have invalidated it so throw an AuthTokenInvalidError
+    raise AuthTokenInvalidError
   end
 
   # Returns true if username is alphanumeric and is of proper length
   def self.username_is_valid(username)
-    username.count("^a-zA-Z0-9._\-").zero? && username.length.between?(MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH)
+    username.count("^a-zA-Z0-9_\.\-").zero? && username.length.between?(MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH)
   end
 
   # Simple password checker to make sure password is not equal to username and not weak
@@ -74,11 +82,6 @@ class User < ActiveRecord::Base
       # Only add the auth token if we passed it in
       h['auth_token'] = auth_token unless auth_token.blank?
     end
-  end
-
-  # For debugging use on web page
-  def display_str
-    "#{username} (#{id})"
   end
 
   # Used on the web page

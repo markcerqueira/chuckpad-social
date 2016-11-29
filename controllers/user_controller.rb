@@ -9,7 +9,13 @@ class UserController < ApplicationController
   # Index page that loads user.erb
   get '/' do
     @users = User.order('id DESC').all
-    @logged_in_user = User.get_user(id: session[:user_id])
+
+    begin
+      @logged_in_user = User.get_user(id: session[:user_id])
+    rescue UserNotFoundError
+      # Nothing to do
+    end
+
     @latest_status_message = session[:status]
     erb :user
   end
@@ -67,11 +73,11 @@ class UserController < ApplicationController
     username_or_email = params[:username_or_email]
     username_or_email.strip
 
-    user = User.get_user(username: username_or_email, email: username_or_email)
-
-    if user.nil?
+    begin
+      user = User.get_user(username: username_or_email, email: username_or_email)
+    rescue UserNotFoundError
       LogHelper.user_controller_log('/password/reset', 'No user found')
-      fail_with_json_msg(500, 'No user was found with that username or email. Please try again.')
+      ResponseHelper.error(self, request, 'No user was found with that username or email. Please try again.')
       return
     end
 
@@ -92,7 +98,7 @@ class UserController < ApplicationController
 
     MailHelper.send_email(user.email, subject, html_body)
 
-    success_with_json_msg('Password reset sent via email.')
+    ResponseHelper.success(self, request, 'Password reset sent via email.')
   end
 
   def is_user_logged_in
@@ -101,11 +107,6 @@ class UserController < ApplicationController
 
   def get_logged_in_user
     return @logged_in_user
-  end
-
-  def redirect_to_index_with_status_msg(msg)
-    session[:status] = msg
-    redirect '/user'
   end
 
   # Sends confirmation email to user passed in
@@ -136,13 +137,13 @@ class UserController < ApplicationController
   # Sends confirmation email for the currently logged in user. Will NOT send an email if the user has already confirmed
   # their email.
   get '/confirm_email/?' do
-    if from_native_client(request)
-      logged_in_user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
-    else
-      logged_in_user = User.get_user(id: session[:user_id])
-    end
-
-    if logged_in_user.nil?
+    begin
+      if from_native_client(request)
+        logged_in_user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
+      else
+        logged_in_user = User.get_user(id: session[:user_id])
+      end
+    rescue UserNotFoundError
       LogHelper.user_controller_log('confirm_email', 'No logged in user found')
       redirect_to_index_with_status_msg('Unable to send confirmation email until a user logs in')
     end
@@ -169,22 +170,26 @@ class UserController < ApplicationController
 
     admin = params[:user].has_key?('admin')
 
-    existing_user = User.get_user(username: username, email: email)
+
+    begin
+      existing_user = User.get_user(username: username, email: email)
+    rescue UserNotFoundError
+      # Do nothing. We want to NOT find a user.
+    end
+
     unless existing_user.nil?
       LogHelper.user_controller_log('create_user', 'user already exists for username = ' + username + '; email = ' + email)
 
-      if from_native_client(request)
-        if existing_user.email == email && existing_user.username == username
-          fail_with_json_msg(500, 'A user with that email address and username already exists.')
-        elsif existing_user.email == email
-          fail_with_json_msg(500, 'A user with that email address already exists.')
-        else
-          fail_with_json_msg(500, 'A user with that username already exists.')
-        end
-        return
+      if existing_user.email == email && existing_user.username == username
+        message = 'A user with that email address and username already exists.'
+      elsif existing_user.email == email
+        message = 'A user with that email address already exists.'
       else
-        redirect_to_index_with_status_msg('Unable to create user because user already exists')
+        message = 'A user with that username already exists.'
       end
+
+      ResponseHelper.error(self, request, message)
+      return
     end
 
     # No user found so we can validate inputs and create a user
@@ -192,45 +197,29 @@ class UserController < ApplicationController
     # Check for username, password, and email being present
     if username.blank? || password.blank? || email.blank?
       LogHelper.user_controller_log('create_user', 'one or more params are empty')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Username, password, and email are all required')
-        return
-      else
-        redirect_to_index_with_status_msg('Username, password, and email are all required')
-      end
+      ResponseHelper.error(self, request, 'Username, password, and email are all required')
+      return
     end
 
     # Check that username has only valid characters and isn't too long
     unless User.username_is_valid(username)
       LogHelper.user_controller_log('create_user', 'invalid characters in username ' + username)
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Invalid characters or length for username')
-        return
-      else
-        redirect_to_index_with_status_msg("Username can only use alphanumeric, period, underscore, and hyphen characters and between #{MIN_USERNAME_LENGTH}-#{MAX_USERNAME_LENGTH} characters")
-      end
+      ResponseHelper.error(self, request, "Username can only use alphanumeric, period, underscore, and hyphen characters and between #{User::MIN_USERNAME_LENGTH}-#{User::MAX_USERNAME_LENGTH} characters")
+      return
     end
 
     # Check password strength
     if User.is_password_weak('create_user', username, password)
       LogHelper.user_controller_log('create_user', 'password is weak')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'The password is too weak')
-        return
-      else
-        redirect_to_index_with_status_msg('The password is too weak')
-      end
+      ResponseHelper.error(self, request, 'The password is too weak')
+      return
     end
 
     # Validate email address
     unless EmailValidator.valid?(email)
       LogHelper.user_controller_log('create_user', 'email is valid')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Please enter a valid email')
-        return
-      else
-        redirect_to_index_with_status_msg('Please enter a valid email')
-      end
+      ResponseHelper.error(self, request, 'Please enter a valid email')
+      return
     end
 
     user = User.new do |u|
@@ -249,11 +238,7 @@ class UserController < ApplicationController
 
     send_confirmation_email(user, request)
 
-    if from_native_client(request)
-      success_with_json_msg(user.as_json(nil, auth_token.auth_token))
-    else
-      redirect_to_index_with_status_msg('User created with id ' + user.id.to_s)
-    end
+    ResponseHelper.success(self, request, user.as_json(nil, auth_token.auth_token), 'User created with id ' + user.id.to_s)
   end
 
   # Given token passed in url, finds the associated user and flags their email as confirmed
@@ -266,9 +251,9 @@ class UserController < ApplicationController
       return
     end
 
-    user = User.get_user(confirm_token: token)
-
-    if user.nil?
+    begin
+      user = User.get_user(confirm_token: token)
+    rescue UserNotFoundError
       LogHelper.user_controller_log('confirm/:token/', 'Could not find user for confirm token')
       redirect_to_index_with_status_msg('Unable to find a user with confirm token = ' + token)
     end
@@ -280,20 +265,20 @@ class UserController < ApplicationController
   end
 
   post '/change_password/?' do
-    if from_native_client(request)
-      logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
-    else
-      logged_in_user = User.get_user(id: session[:user_id])
-    end
-
-    if logged_in_user.nil?
-      LogHelper.user_controller_log('change_password', 'No user found')
+    begin
       if from_native_client(request)
-        fail_with_json_msg(500, 'Could not find user')
-        return;
+        logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
       else
-        redirect_to_index_with_status_msg('Unable to change password as no user is currently logged in')
+        logged_in_user = User.get_user(id: session[:user_id])
       end
+    rescue UserNotFoundError
+      LogHelper.user_controller_log('change_password', 'No user found')
+      ResponseHelper.error(self, request, 'Could not find user', 'Unable to change password as no user is currently logged in')
+      return
+    rescue AuthTokenInvalidError
+      LogHelper.user_controller_log(caller, 'Invalid auth token found and fail_quietly = ' + fail_quietly.to_s)
+      ResponseHelper.auth_error(self, request, 'Your auth token is invalid. Please log in again.')
+      return
     end
 
     new_password = params[:new_password]
@@ -301,12 +286,8 @@ class UserController < ApplicationController
 
     if User.is_password_weak('change_password', nil, new_password)
       LogHelper.user_controller_log('change_password', 'password is weak')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'The password is too weak')
-        return
-      else
-        redirect_to_index_with_status_msg('The password is too weak')
-      end
+      ResponseHelper.error(self, request, 'Please enter a valid email')
+      return
     end
 
     logged_in_user.salt = BCrypt::Engine.generate_salt
@@ -314,11 +295,7 @@ class UserController < ApplicationController
 
     logged_in_user.save
 
-    if from_native_client(request)
-      success_with_json_msg('Password updated')
-    else
-      redirect_to_index_with_status_msg('Password updated')
-    end
+    ResponseHelper.success(self, request, 'Password updated')
   end
 
   # Clears session cookie (web) or invalidates auth token (native clients)
@@ -336,9 +313,9 @@ class UserController < ApplicationController
     token_invalidated = AuthToken.invalidate_token(params[:username], params[:email], params[:auth_token])
 
     if token_invalidated
-      success_with_json_msg('Successfully logged out')
+      ResponseHelper.success(self, request, 'Successfully logged out')
     else
-      fail_with_json_msg(500, 'Unable to log user out')
+      ResponseHelper.error(self, request, 'Unable to log user out')
     end
   end
 
@@ -353,65 +330,45 @@ class UserController < ApplicationController
     # Check for username, password, and email being present
     if username_or_email.blank? || password.blank?
       LogHelper.user_controller_log('login', 'one or more params are empty')
-      if from_native_client(request)
-        fail_with_json_msg(500, 'Username/email and password are required.')
-        return
-      else
-        redirect_to_index_with_status_msg('Username/email and password are required.')
-      end
+      ResponseHelper.error(self, request, 'Username/email and password are required.')
+      return
     end
 
-    user = User.get_user(username: username_or_email, email: username_or_email)
-
-    if user.nil?
+    begin
+      user = User.get_user(username: username_or_email, email: username_or_email)
+    rescue UserNotFoundError
       LogHelper.user_controller_log('login', 'Login failed; no user found')
-
-      error = true
-      error_message = 'Unable to find user with details ' + params[:username_or_email]
+      ResponseHelper.error(self, request, 'Unable to find user with details ' + params[:username_or_email])
+      return
     end
 
     # If someone is trying to log in too rapidly, slow them down a bit
-    unless error
-      unless user.last_login_attempt.nil?
-        seconds_since_last_login = (DateTime.now.to_f - user.last_login_attempt.to_f).to_f
-        if seconds_since_last_login < LOGIN_THROTTLE_SECONDS
-          sleep_length = LOGIN_THROTTLE_SECONDS - seconds_since_last_login
-          LogHelper.user_controller_log('login', "User attempted to login too quickly so sleeping for #{sleep_length} seconds")
-          sleep(sleep_length)
-        end
-      end
-
-      user.last_login_attempt = DateTime.now
-      user.save
-    end
-
-    unless error
-      if user.password_hash == BCrypt::Engine.hash_secret(password, user.salt)
-        session[:user_id] = user.id
-        # No current notion of session for native clients
-      else
-        LogHelper.user_controller_log('login', 'Bad password')
-
-        error = true
-        error_message = 'Login failed because of bad password'
+    unless user.last_login_attempt.nil?
+      seconds_since_last_login = (DateTime.now.to_f - user.last_login_attempt.to_f).to_f
+      if seconds_since_last_login < LOGIN_THROTTLE_SECONDS
+        sleep_length = LOGIN_THROTTLE_SECONDS - seconds_since_last_login
+        LogHelper.user_controller_log('login', "User attempted to login too quickly so sleeping for #{sleep_length} seconds")
+        sleep(sleep_length)
       end
     end
 
-    if error
-      if from_native_client(request)
-        fail_with_json_msg(500, error_message)
-        return
-      else
-        redirect_to_index_with_status_msg(error_message)
-      end
+    user.last_login_attempt = DateTime.now
+    user.save
+
+    if user.password_hash == BCrypt::Engine.hash_secret(password, user.salt)
+      session[:user_id] = user.id
+      # No current notion of session for native clients
     else
-      if from_native_client(request)
-        auth_token = AuthToken.generate_token(user)
-        success_with_json_msg(user.as_json(nil, auth_token.auth_token))
-      else
-        redirect_to_index_with_status_msg('Logged in successfully')
-      end
+      LogHelper.user_controller_log('login', 'Bad password')
+      ResponseHelper.error(self, request, 'Login failed because of bad password')
+      return
     end
+
+    if from_native_client(request)
+      auth_token = AuthToken.generate_token(user)
+      auth_token_value = (user.as_json(nil, auth_token.auth_token))
+    end
+    ResponseHelper.success(self, request, if auth_token_value.nil? then '' else auth_token_value end, 'Logged in successfully')
   end
 
 end

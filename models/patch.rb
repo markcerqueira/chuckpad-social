@@ -51,11 +51,4 @@ class Patch < ActiveRecord::Base
     }
   end
 
-  def creator_display_str
-    if creator.nil?
-      'Orphaned'
-    else
-      creator.display_str
-    end
-  end
 end

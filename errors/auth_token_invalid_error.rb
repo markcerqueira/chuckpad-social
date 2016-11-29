@@ -1,0 +1,3 @@
+class AuthTokenInvalidError < StandardError
+
+end

@@ -134,7 +134,7 @@
           <td><%= patch.hidden %></td>
           <td><%= patch.revision %></td>
           <td><%= patch.filename %></td>
-          <td><%= patch.creator_display_str %></td>
+          <td><%= patch.creator.username %></td>
           <td>
               <a href='patch/download/<%= patch.id %>'>Download</a>
             / <a href='patch/download/<%= patch.parent_id %>'>Download Parent</a>
