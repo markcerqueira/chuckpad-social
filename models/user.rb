@@ -13,8 +13,10 @@ class User < ActiveRecord::Base
   #
   # Throws: UserNotFoundError
   def self.get_user(id: -1, username: nil, email: nil, confirm_token: nil)
-    user = (User.find_by_id(id) if id != -1) || (User.find_by_username(username) if username.present?) ||
-           (User.find_by_email(email) if email.present?) || (User.find_by_confirm_token(confirm_token) if confirm_token.present?)
+    user = (User.find_by_id(id) if id != -1) ||
+        ((User.where('lower(username) = ?', username.downcase).first) if username.present?) || # username is case-insensitive
+        ((User.where('lower(email) = ?', email.downcase).first) if email.present?) || # email is case insensitive
+        (User.find_by_confirm_token(confirm_token) if confirm_token.present?)
 
     if user.nil?
       raise UserNotFoundError

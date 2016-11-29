@@ -180,9 +180,9 @@ class UserController < ApplicationController
     unless existing_user.nil?
       LogHelper.user_controller_log('create_user', 'user already exists for username = ' + username + '; email = ' + email)
 
-      if existing_user.email == email && existing_user.username == username
+      if existing_user.email.casecmp(email) == 0 && existing_user.username.casecmp(username) == 0
         message = 'A user with that email address and username already exists.'
-      elsif existing_user.email == email
+      elsif existing_user.email.casecmp(email) == 0
         message = 'A user with that email address already exists.'
       else
         message = 'A user with that username already exists.'
