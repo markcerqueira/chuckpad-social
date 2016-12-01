@@ -9,7 +9,7 @@ ConfigEnv.init("#{__dir__}/config/env.rb")
 
 require './controllers/application_controller'
 
-Dir.glob('./{config,models,modules,errors,helpers,controllers}/*.rb').each { |file| require file }
+Dir.glob('./{config,controllers,errors,extensions,helpers,models,modules}/*.rb').each { |file| require file }
 
 map('/') { run ApplicationController }
 map('/patch') { run PatchController }

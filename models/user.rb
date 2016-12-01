@@ -45,9 +45,11 @@ class User < ActiveRecord::Base
     raise AuthTokenInvalidError
   end
 
-  # Returns true if username is alphanumeric and is of proper length
+  VALID_USERNAME_REGEX = /^[a-zA-Z0-9_.-]{#{MIN_USERNAME_LENGTH},#{MAX_USERNAME_LENGTH}}$/
+
+  # Returns true if username is alphanumeric (also including . _ -) and is of proper length
   def self.username_is_valid(username)
-    username.count("^a-zA-Z0-9_\.\-").zero? && username.length.between?(MIN_USERNAME_LENGTH, MAX_USERNAME_LENGTH)
+    return username.matches? VALID_USERNAME_REGEX
   end
 
   # Simple password checker to make sure password is not equal to username and not weak

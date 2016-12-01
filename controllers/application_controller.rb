@@ -8,6 +8,8 @@ require 'json'
 require 'sendgrid-ruby'
 require 'strong_password'
 
+require './extensions/string_extension'
+
 require './models/abuse_report'
 require './models/auth_token'
 require './models/patch'
