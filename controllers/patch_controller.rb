@@ -107,19 +107,28 @@ class PatchController < ApplicationController
 
   # Creates a new patch
   post '/create_patch/?' do
-    LogHelper.patch_controller_log('/create_patch', params)
+    LogHelper.patch_controller_log('create_patch', params)
 
     # User must be logged in to create a patch
-    current_user, error = get_user_from_params('/create_patch', request, params)
+    current_user, error = get_user_from_params('create_patch', request, params)
     if error
-      LogHelper.patch_controller_log('/create_patch', 'get_user call had an error')
+      LogHelper.patch_controller_log('create_patch', 'get_user call had an error')
       return
     end
 
     # Make sure file is below file size limit
     if File.size(params[:patch][:data][:tempfile]) > TEN_KB_IN_BYTES
-      LogHelper.patch_controller_log('/create_patch', 'File size too large')
+      LogHelper.patch_controller_log('create_patch', 'File size too large')
       ResponseHelper.error(self, request, 'File size is too large')
+      return
+    end
+
+    patch_data = params[:patch][:data][:tempfile].read
+    patch_data_digest = Digest::SHA256.hexdigest patch_data
+
+    if Patch.where(creator_id: current_user.id, data_hash: patch_data_digest, patch_type: params[:patch][:type].to_i).present?
+      LogHelper.patch_controller_log('create_patch', 'User attempting to create patch with same data')
+      ResponseHelper.error(self, request, 'A patch with this data has already been uploaded.')
       return
     end
 
@@ -132,13 +141,14 @@ class PatchController < ApplicationController
       p.hidden = params[:patch].has_key?('hidden')
       p.description = params[:patch][:description]
       p.parent_id = (params[:patch][:parent_id] || -1)
-      p.data = params[:patch][:data][:tempfile].read
+      p.data = patch_data
       p.filename = params[:patch][:data][:filename]
       p.creator_id = current_user.id
       p.revision = 1
       p.created_at = DateTime.now.new_offset(0)
       p.updated_at = DateTime.now.new_offset(0)
-      p.download_count = 0;
+      p.download_count = 0
+      p.data_hash = patch_data_digest
 
       if p.name.nil? || p.name.empty?
         p.name = p.filename

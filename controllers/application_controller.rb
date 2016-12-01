@@ -3,6 +3,7 @@ require 'sinatra/base'
 
 require 'active_record'
 require 'bcrypt'
+require 'digest'
 require 'email_validator'
 require 'json'
 require 'sendgrid-ruby'
