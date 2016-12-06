@@ -21,6 +21,7 @@ require './modules/mail_helper'
 require './modules/response_helper'
 
 require './errors/auth_token_invalid_error'
+require './errors/patch_create_error'
 require './errors/user_not_found_error'
 
 class ApplicationController < Sinatra::Base

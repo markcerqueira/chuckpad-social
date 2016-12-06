@@ -13,7 +13,7 @@
     <ul>
       <li>Username: <%= @logged_in_user.username %></li>
       <li>
-        <form action="/user/change_password" method="POST">
+        <form action="/user/password/change/" method="POST">
           <td>Change Password:</td>
           <td><input type="text" name="new_password" value=""/></td>
           <td><input type="hidden" id="" name="user_id" value=<%= @logged_in_user.id %>/></td>
@@ -31,7 +31,7 @@
     <!-- Create User -->
     <div style="width: 600px; display: table-cell;">
       <h3>Create User</h3>
-      <form action="/user/create_user" method="POST">
+      <form action="/user/create" method="POST">
         <table>
           <tbody>
           <tr>

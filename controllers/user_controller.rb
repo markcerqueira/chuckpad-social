@@ -158,7 +158,7 @@ class UserController < ApplicationController
   end
 
   # Creates a new user
-  post '/create_user/?' do
+  post '/create/?' do
     username = params[:user][:username]
     username.strip
 
@@ -178,7 +178,7 @@ class UserController < ApplicationController
     end
 
     unless existing_user.nil?
-      LogHelper.user_controller_log('create_user', 'user already exists for username = ' + username + '; email = ' + email)
+      LogHelper.user_controller_log('create', 'user already exists for username = ' + username + '; email = ' + email)
 
       if existing_user.email.casecmp(email) == 0 && existing_user.username.casecmp(username) == 0
         message = 'A user with that email address and username already exists.'
@@ -196,28 +196,28 @@ class UserController < ApplicationController
 
     # Check for username, password, and email being present
     if username.blank? || password.blank? || email.blank?
-      LogHelper.user_controller_log('create_user', 'one or more params are empty')
+      LogHelper.user_controller_log('create', 'one or more params are empty')
       ResponseHelper.error(self, request, 'Username, password, and email are all required')
       return
     end
 
     # Check that username has only valid characters and isn't too long
     unless User.username_is_valid(username)
-      LogHelper.user_controller_log('create_user', 'invalid characters in username ' + username)
+      LogHelper.user_controller_log('create', 'invalid characters in username ' + username)
       ResponseHelper.error(self, request, "Username can only use alphanumeric, period, underscore, and hyphen characters and between #{User::MIN_USERNAME_LENGTH}-#{User::MAX_USERNAME_LENGTH} characters")
       return
     end
 
     # Check password strength
-    if User.is_password_weak('create_user', username, password)
-      LogHelper.user_controller_log('create_user', 'password is weak')
+    if User.is_password_weak('create', username, password)
+      LogHelper.user_controller_log('create', 'password is weak')
       ResponseHelper.error(self, request, 'The password is too weak')
       return
     end
 
     # Validate email address
     unless EmailValidator.valid?(email)
-      LogHelper.user_controller_log('create_user', 'email is valid')
+      LogHelper.user_controller_log('create', 'email is valid')
       ResponseHelper.error(self, request, 'Please enter a valid email')
       return
     end
@@ -264,7 +264,7 @@ class UserController < ApplicationController
     redirect_to_index_with_status_msg('Email confirmed for user ' + user.username)
   end
 
-  post '/change_password/?' do
+  post '/password/change/?' do
     begin
       if from_native_client(request)
         logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
@@ -272,11 +272,11 @@ class UserController < ApplicationController
         logged_in_user = User.get_user(id: session[:user_id])
       end
     rescue UserNotFoundError
-      LogHelper.user_controller_log('change_password', 'No user found')
+      LogHelper.user_controller_log('password/change', 'No user found')
       ResponseHelper.error(self, request, 'Could not find user', 'Unable to change password as no user is currently logged in')
       return
     rescue AuthTokenInvalidError
-      LogHelper.user_controller_log(caller, 'Invalid auth token found and fail_quietly = ' + fail_quietly.to_s)
+      LogHelper.user_controller_log('password/change', 'Invalid auth token found and fail_quietly = ' + fail_quietly.to_s)
       ResponseHelper.auth_error(self, request, 'Your auth token is invalid. Please log in again.')
       return
     end
@@ -284,8 +284,8 @@ class UserController < ApplicationController
     new_password = params[:new_password]
     new_password.strip!
 
-    if User.is_password_weak('change_password', nil, new_password)
-      LogHelper.user_controller_log('change_password', 'password is weak')
+    if User.is_password_weak('password/change', nil, new_password)
+      LogHelper.user_controller_log('password/change', 'password is weak')
       ResponseHelper.error(self, request, 'Please enter a valid email')
       return
     end
