@@ -159,80 +159,13 @@ class UserController < ApplicationController
 
   # Creates a new user
   post '/create/?' do
-    username = params[:user][:username]
-    username.strip
-
-    email = params[:user][:email]
-    email.strip
-
-    password = params[:password]
-    password.strip
-
-    admin = params[:user].has_key?('admin')
-
-
     begin
-      existing_user = User.get_user(username: username, email: email)
-    rescue UserNotFoundError
-      # Do nothing. We want to NOT find a user.
-    end
-
-    unless existing_user.nil?
-      LogHelper.user_controller_log('create', 'user already exists for username = ' + username + '; email = ' + email)
-
-      if existing_user.email.casecmp(email) == 0 && existing_user.username.casecmp(username) == 0
-        message = 'A user with that email address and username already exists.'
-      elsif existing_user.email.casecmp(email) == 0
-        message = 'A user with that email address already exists.'
-      else
-        message = 'A user with that username already exists.'
-      end
-
-      ResponseHelper.error(self, request, message)
+      user = User.create_user(params)
+    rescue UserCreateError => error
+      LogHelper.user_controller_log('create', error.message)
+      ResponseHelper.error(self, request, error.message)
       return
     end
-
-    # No user found so we can validate inputs and create a user
-
-    # Check for username, password, and email being present
-    if username.blank? || password.blank? || email.blank?
-      LogHelper.user_controller_log('create', 'one or more params are empty')
-      ResponseHelper.error(self, request, 'Username, password, and email are all required')
-      return
-    end
-
-    # Check that username has only valid characters and isn't too long
-    unless User.username_is_valid(username)
-      LogHelper.user_controller_log('create', 'invalid characters in username ' + username)
-      ResponseHelper.error(self, request, "Username can only use alphanumeric, period, underscore, and hyphen characters and between #{User::MIN_USERNAME_LENGTH}-#{User::MAX_USERNAME_LENGTH} characters")
-      return
-    end
-
-    # Check password strength
-    if User.is_password_weak('create', username, password)
-      LogHelper.user_controller_log('create', 'password is weak')
-      ResponseHelper.error(self, request, 'The password is too weak')
-      return
-    end
-
-    # Validate email address
-    unless EmailValidator.valid?(email)
-      LogHelper.user_controller_log('create', 'email is valid')
-      ResponseHelper.error(self, request, 'Please enter a valid email')
-      return
-    end
-
-    user = User.new do |u|
-      u.username = username
-      u.email = email
-      u.admin = admin
-      u.salt = BCrypt::Engine.generate_salt
-      u.password_hash = BCrypt::Engine.hash_secret(password, u.salt)
-      u.email_confirmed = false
-      u.confirm_token = SecureRandom.urlsafe_base64.to_s
-    end
-
-    user.save
 
     auth_token = AuthToken.generate_token(user)
 
