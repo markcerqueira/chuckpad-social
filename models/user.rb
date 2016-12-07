@@ -1,7 +1,7 @@
 class User < ActiveRecord::Base
   has_many :patches, foreign_key: :creator_id
 
-  MIN_PASSWORD_ENTROPY = 6
+  MIN_PASSWORD_ENTROPY = 10
 
   # Username length constraints (inclusive on both ends)
   MIN_USERNAME_LENGTH = 2
