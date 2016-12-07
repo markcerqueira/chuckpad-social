@@ -219,7 +219,7 @@ class UserController < ApplicationController
 
     if User.is_password_weak('password/change', nil, new_password)
       LogHelper.user_controller_log('password/change', 'password is weak')
-      ResponseHelper.error(self, request, 'Please enter a valid email')
+      ResponseHelper.error(self, request, 'This password is took weak. Please pick a stronger password.')
       return
     end
 
