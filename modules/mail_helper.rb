@@ -6,7 +6,7 @@ module MailHelper
   def self.send_email(to_field, subject_text, html_body_text)
     sendgrid_api_key = ENV['SENDGRID_API_KEY']
     if sendgrid_api_key.nil? or sendgrid_api_key.empty?
-      puts 'send_email - SendGrid API key is not configured so cannot send email'
+      puts 'MailHelper/send_email - SendGrid API key is not configured so cannot send email'
       return
     end
 
@@ -21,7 +21,7 @@ module MailHelper
       response = sg.client.mail._('send').post(request_body: mail.to_json)
       puts response.status_code.to_s + ', ' + response.body.to_s + ', ' + response.headers.to_s
     rescue Exception => e
-      puts "send_email - exception thrown: #{e.message}"
+      puts "MailHelper/send_email - exception thrown: #{e.message}"
     end
   end
 

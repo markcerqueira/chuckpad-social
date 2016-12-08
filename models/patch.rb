@@ -44,15 +44,17 @@ class Patch < ActiveRecord::Base
 
     # Create patch
     patch = Patch.new do |p|
+      p.guid = SecureRandom.hex(12)
       p.name = params[:patch][:name]
       p.patch_type = params[:patch][:type].to_i
-      p.featured = params[:patch].has_key?('featured')
-      p.documentation = params[:patch].has_key?('documentation')
-      p.hidden = params[:patch].has_key?('hidden')
+
+      if params[:patch].has_key?('hidden')
+        p.hidden = params[:patch][:hidden]
+      end
+
       p.description = params[:patch][:description]
-      p.parent_id = (params[:patch][:parent_id] || -1)
+      p.parent_guid = (params[:patch][:parent_guid] || nil)
       p.data = patch_data
-      p.filename = params[:patch][:data][:filename]
       p.creator_id = user.id
       p.revision = 1
       p.created_at = DateTime.now.new_offset(0)
@@ -60,11 +62,15 @@ class Patch < ActiveRecord::Base
       p.download_count = 0
       p.data_hash = patch_data_digest
 
-      if p.name.nil? || p.name.empty?
-        p.name = p.filename
+      if params[:patch][:extra_data] != nil
+        p.extra_data = params[:patch][:extra_data][:tempfile].read
       end
 
-      if p.description.nil? || p.description.empty?
+      if p.name.blank?
+        p.name = ''
+      end
+
+      if p.description.blank?
         p.description = ''
       end
     end
@@ -84,30 +90,26 @@ class Patch < ActiveRecord::Base
 
   # Returns patch object as a hash
   def to_hash()
-    # TODO Check parent for visibility access in case it changes
-    parentPatch = Patch.find_by_id(parent_id)
-    patch_parent_id = -1
-    unless parentPatch.nil?
-      patch_parent_id = parent_id
-    end
-
     {
-        'id' => id,
+        'guid' => guid,
         'name' => name,
         'description' => description,
         'featured' => featured,
         'documentation' => documentation,
         'hidden' => hidden, # Only creators of a particular patch will ever get back hidden => true
-        'parent_id' => patch_parent_id,
-        'filename' => filename,
         'creator_id' => creator_id,
         'creator_username' => User.get_user(id: creator_id).username,
         'created_at' => created_at.strftime('%Y-%m-%d %H:%M:%S'), # http://stackoverflow.com/a/9132422/265791
         'updated_at' => updated_at.strftime('%Y-%m-%d %H:%M:%S'),
         'download_count' => download_count,
         'abuse_count' => abuse_count,
-        'resource' => '/patch/download/' + id.to_s
-    }
+        'resource' => '/patch/download/' + guid.to_s
+    }.tap do |h|
+      parent_patch = Patch.find_by_guid(parent_guid)
+      if parent_patch.present? && !parent_patch.hidden
+        h['parent_guid'] = parent_patch.guid
+      end
+    end
   end
 
 end

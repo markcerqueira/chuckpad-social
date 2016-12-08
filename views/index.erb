@@ -35,8 +35,8 @@
             <td><input type="text" name="patch[description]" value=""/></td>
           </tr>
           <tr>
-            <td>Parent Patch ID</td>
-            <td><input type="text" name="patch[parent_id]" value=""/></td>
+            <td>Parent Patch GUID</td>
+            <td><input type="text" name="patch[parent_guid]" value=""/></td>
           </tr>
           <tr>
             <td>Featured</td>
@@ -111,14 +111,14 @@
   <table class="fullscreen" cellpadding="10">
     <thead>
     <th>Id</th>
+    <th>GUID</th>
     <th>Name</th>
     <th>Description</th>
-    <th>Parent ID</th>
+    <th>Parent GUID</th>
     <th>Featured</th>
     <th>Documentation</th>
     <th>Hidden</th>
     <th>Revision</th>
-    <th>Filename</th>
     <th>Creator</th>
     <th>Actions</th>
     </thead>
@@ -126,18 +126,18 @@
     <% @patches.each do |patch| %>
         <tr>
           <td><%= patch.id %></td>
+          <td><%= patch.guid %></td>
           <td><%= patch.name %></td>
           <td><%= patch.description %></td>
-          <td><%= patch.parent_id %></td>
+          <td><%= patch.parent_guid %></td>
           <td><%= patch.featured %></td>
           <td><%= patch.documentation %></td>
           <td><%= patch.hidden %></td>
           <td><%= patch.revision %></td>
-          <td><%= patch.filename %></td>
           <td><%= patch.creator.username %></td>
           <td>
-              <a href='patch/download/<%= patch.id %>'>Download</a>
-            / <a href='patch/download/<%= patch.parent_id %>'>Download Parent</a>
+              <a href='patch/download/<%= patch.guid %>'>Download</a>
+            / <a href='patch/download/<%= patch.parent_guid %>'>Download Parent</a>
             / <a href='patch/delete/<%= patch.id %>'>Delete</a>
           </td>
         </tr>

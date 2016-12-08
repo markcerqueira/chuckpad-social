@@ -1,6 +1,6 @@
 module ResponseHelper
 
-  # Respone codes that client should be aware of
+  # Response codes that client should be aware of
   CODE_SUCCESS = 200
   CODE_ERROR = 500
   CODE_INVALID_AUTH = 400
