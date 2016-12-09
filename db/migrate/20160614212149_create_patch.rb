@@ -20,7 +20,7 @@ class CreatePatch < ActiveRecord::Migration
 
       t.integer :creator_id
 
-      t.integer :parent_guid, :default => nil
+      t.string :parent_guid, :default => nil
 
       t.integer :download_count, :default => 0
       t.integer :abuse_count, :default => 0

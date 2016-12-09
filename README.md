@@ -17,7 +17,7 @@ chuckpad-social is an upload-download service for ChucK patches in the MiniAudic
 * Run `bundle exec rake db:migrate` to run all migrations on the database.
 * Run the service locally: `bundle exec rerun 'rackup -p 9292'`.
 * Locally visit [localhost:9292](http://localhost:9292/). If you see connection errors when you visit this page, you need to lanuch the Postgres app! As files are changed the rerun gem will automatically reload the app.
-* If you need to reset database on Heroku: `heroku pg:reset DATABASE --app chuckpad-social` and then `heroku run rake db:migrate --app chuckpad-social`. If you need to reset the database locally, run `psql` and then `DROP DATABASE chuckpad-social;`.
+* If you need to reset database on Heroku: `heroku pg:reset DATABASE --app chuckpad-social --confirm chuckpad-social` and then `heroku run rake db:migrate --app chuckpad-social`. If you need to reset the database locally, run `psql` and then `DROP DATABASE chuckpad-social;`.
 
 ### Contribute
 Improvements are appreciated and always welcome! If you'd like to work on features on the roadmap, feel free to view our [project task page on Asana][5]. You'll need to log into your Asana account.

@@ -27,10 +27,27 @@ class Patch < ActiveRecord::Base
   #
   # Throws: PatchCreateError
   def self.create_patch(user, params)
+    if params[:patch][:data].nil?
+      LogHelper.patch_log('create_patch', 'Patch data is required for creating a patch')
+      raise PatchCreateError, "Some data is required to create a patch."
+    end
+
     # Make sure file is below file size limit
     if File.size(params[:patch][:data][:tempfile]) > MAX_PATCH_FILE_SIZE_BYTES
-      LogHelper.patch_log('create_patch', 'File size too large')
+      LogHelper.patch_log('create_patch', 'Patch data is too large')
       raise PatchCreateError, "Patch file is too large. The maximum allowed is #{MAX_PATCH_FILE_SIZE_KB} KB."
+    end
+
+    if File.size(params[:patch][:data][:tempfile]) == 0
+      LogHelper.patch_log('create_patch', 'Patch data is empty')
+      raise PatchCreateError, "File contains no data. Please upload some data with your patch."
+    end
+
+    if params[:patch][:extra_data] != nil
+      if File.size(params[:patch][:extra_data][:tempfile]) > MAX_PATCH_FILE_SIZE_BYTES
+        LogHelper.patch_log('create_patch', 'Patch extra data is large')
+        raise PatchCreateError, "Extra data for this patch is too large. The maximum allowed is #{MAX_PATCH_FILE_SIZE_KB} KB."
+      end
     end
 
     patch_data = params[:patch][:data][:tempfile].read
@@ -45,14 +62,9 @@ class Patch < ActiveRecord::Base
     # Create patch
     patch = Patch.new do |p|
       p.guid = SecureRandom.hex(12)
-      p.name = params[:patch][:name]
+      p.name = (params[:patch][:name] || '')
+      p.description = (params[:patch][:description] || '')
       p.patch_type = params[:patch][:type].to_i
-
-      if params[:patch].has_key?('hidden')
-        p.hidden = params[:patch][:hidden]
-      end
-
-      p.description = params[:patch][:description]
       p.parent_guid = (params[:patch][:parent_guid] || nil)
       p.data = patch_data
       p.creator_id = user.id
@@ -62,16 +74,12 @@ class Patch < ActiveRecord::Base
       p.download_count = 0
       p.data_hash = patch_data_digest
 
+      if params[:patch].has_key?('hidden')
+        p.hidden = params[:patch][:hidden]
+      end
+
       if params[:patch][:extra_data] != nil
         p.extra_data = params[:patch][:extra_data][:tempfile].read
-      end
-
-      if p.name.blank?
-        p.name = ''
-      end
-
-      if p.description.blank?
-        p.description = ''
       end
     end
 
@@ -105,9 +113,15 @@ class Patch < ActiveRecord::Base
         'abuse_count' => abuse_count,
         'resource' => '/patch/download/' + guid.to_s
     }.tap do |h|
-      parent_patch = Patch.find_by_guid(parent_guid)
-      if parent_patch.present? && !parent_patch.hidden
-        h['parent_guid'] = parent_patch.guid
+      if parent_guid.present?
+        parent_patch = Patch.find_by_guid(parent_guid)
+        if parent_patch.present? && !parent_patch.hidden
+          h['parent_guid'] = parent_patch.guid
+        end
+      end
+
+      if extra_data.present?
+        h['extra_resource'] = '/patch/download/extra/' + guid.to_s
       end
     end
   end

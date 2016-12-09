@@ -104,6 +104,8 @@ class PatchController < ApplicationController
 
   # Creates a new patch
   post '/create/?' do
+    # LogHelper.patch_controller_log('create', params)
+
     # User must be logged in to create a patch
     current_user, error = get_user_from_params('create', request, params)
     if error
@@ -122,16 +124,25 @@ class PatchController < ApplicationController
   # Updates an existing patch. Supports updating data file, name of the patch, and visibility. Revision is
   # incremented when an update occurs.
   post '/update/?' do
+    # LogHelper.patch_controller_log('update', params)
+
     params[:guid] = params[:patch][:guid]
 
     patch, error = get_user_authenticated_and_modifiable_patch('update', request, params)
-    if error
+    if patch.nil? or error.present?
       LogHelper.patch_controller_log('update', 'get_user_authenticated_and_modifiable_patch call had an error')
+      ResponseHelper.error(self, request, 'There was an error finding the patch to update. Please try again.')
       return
     end
 
     data = params[:patch][:data]
     unless data.nil?
+      if File.size(params[:patch][:data][:tempfile]) == 0
+        LogHelper.patch_controller_log('update', 'data provided is zero-length')
+        ResponseHelper.error(self, request, 'Patch cannot be updated with empty data. Please try again.')
+        return
+      end
+
       patch.data = params[:patch][:data][:tempfile].read
       patch.data_hash = Digest::SHA256.hexdigest patch.data
       revision_made = true
@@ -236,6 +247,18 @@ class PatchController < ApplicationController
     attachment patch.name
     content_type 'application/octet-stream'
     patch.data
+  end
+
+  get '/download/extra/:guid/?' do
+    patch, error = get_patch('download/extra', request, params[:guid])
+    if error
+      LogHelper.patch_controller_log('download/extra', 'get_patch call had an error')
+      return
+    end
+
+    attachment patch.name
+    content_type 'application/octet-stream'
+    patch.extra_data
   end
 
   # Deletes patch for given patch id
