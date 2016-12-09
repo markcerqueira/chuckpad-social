@@ -109,8 +109,8 @@ class UserController < ApplicationController
     return @logged_in_user
   end
 
-  # Sends confirmation email to user passed in
-  # Confirmation email is HTML-based and is pulled from the views/welcome_email.erb file
+  # Sends confirmation email to user passed in. Confirmation email is HTML-based and is pulled from the
+  # views/welcome_email.erb file
   def send_confirmation_email(user, request)
     if user.nil?
       LogHelper.user_controller_log('send_confirmation_email', 'user is nil')
@@ -132,29 +132,6 @@ class UserController < ApplicationController
     MailHelper.send_email(user.email, subject, html_body)
 
     LogHelper.user_controller_log('send_confirmation_email', 'Confirmation email sent to ' + user.email)
-  end
-
-  # Sends confirmation email for the currently logged in user. Will NOT send an email if the user has already confirmed
-  # their email.
-  get '/confirm_email/?' do
-    begin
-      if from_native_client(request)
-        logged_in_user = User.get_user(username: params[:username_or_email], email: params[:username_or_email])
-      else
-        logged_in_user = User.get_user(id: session[:user_id])
-      end
-    rescue UserNotFoundError
-      LogHelper.user_controller_log('confirm_email', 'No logged in user found')
-      redirect_to_index_with_status_msg('Unable to send confirmation email until a user logs in')
-    end
-
-    if logged_in_user.email_confirmed
-      LogHelper.user_controller_log('confirm_email', 'User has already confirmed email')
-      redirect_to_index_with_status_msg('User has already confirmed email so not sending another email')
-    end
-
-    send_confirmation_email(logged_in_user, request)
-    redirect_to_index_with_status_msg('Confirmation email sent to ' + logged_in_user.email)
   end
 
   # Creates a new user
