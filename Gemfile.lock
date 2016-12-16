@@ -36,8 +36,6 @@ GEM
     rack (1.4.1)
     rack-protection (1.2.0)
       rack
-    rack-test (0.6.3)
-      rack (>= 1.0)
     rake (10.4.2)
     rb-fsevent (0.9.7)
     rb-inotify (0.9.7)
@@ -71,7 +69,6 @@ DEPENDENCIES
   mail
   minitest
   pg (~> 0.15)
-  rack-test
   rake (~> 10.4.2)
   rerun
   sendgrid-ruby (~> 4.0.2)
