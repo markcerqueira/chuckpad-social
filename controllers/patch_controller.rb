@@ -106,6 +106,13 @@ class PatchController < ApplicationController
   post '/create/?' do
     # LogHelper.patch_controller_log('create', params)
 
+    begin
+      DigestHelper.validate_digest(request.params)
+    rescue DigestError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
+
     # User must be logged in to create a patch
     current_user, error = get_user_from_params('create', request, params)
     if error
@@ -126,7 +133,12 @@ class PatchController < ApplicationController
   post '/update/?' do
     # LogHelper.patch_controller_log('update', params)
 
-    params[:guid] = params[:patch][:guid]
+    begin
+      DigestHelper.validate_digest(request.params)
+    rescue DigestError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
 
     patch, error = get_user_authenticated_and_modifiable_patch('update', request, params)
     if patch.nil? or error.present?
@@ -135,32 +147,32 @@ class PatchController < ApplicationController
       return
     end
 
-    data = params[:patch][:data]
+    data = params[:patch_data]
     unless data.nil?
-      if File.size(params[:patch][:data][:tempfile]) == 0
+      if File.size(params[:patch_data][:tempfile]) == 0
         LogHelper.patch_controller_log('update', 'data provided is zero-length')
         ResponseHelper.error(self, request, 'Patch cannot be updated with empty data. Please try again.')
         return
       end
 
-      patch.data = params[:patch][:data][:tempfile].read
+      patch.data = params[:patch_data][:tempfile].read
       patch.data_hash = Digest::SHA256.hexdigest patch.data
       revision_made = true
     end
 
-    name = params[:patch][:name]
+    name = params[:patch_name]
     unless name.nil? || name.empty?
       patch.name = name
       revision_made = true
     end
 
-    hidden = params[:patch][:hidden]
+    hidden = params[:patch_hidden]
     unless hidden.nil? || hidden.empty?
       patch.hidden = hidden
-      revision_made = true;
+      revision_made = true
     end
 
-    description = params[:patch][:description]
+    description = params[:patch_description]
     unless description.nil? || description.empty?
       patch.description = description
       revision_made = true
@@ -279,6 +291,13 @@ class PatchController < ApplicationController
   # Toggle report abuse for a patch
   post '/report/:guid/?' do
     # LogHelper.patch_controller_log('report', params)
+
+    begin
+      DigestHelper.validate_digest(request.params)
+    rescue DigestError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
 
     # User must be logged in to report an abusive patch
     current_user, error = get_user_from_params('report', request, params)

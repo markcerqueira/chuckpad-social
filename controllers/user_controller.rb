@@ -137,6 +137,13 @@ class UserController < ApplicationController
   # Creates a new user
   post '/create/?' do
     begin
+      DigestHelper.validate_digest(request.params)
+    rescue DigestError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
+
+    begin
       user = User.create_user(params)
     rescue UserCreateError => error
       LogHelper.user_controller_log('create', error.message)
@@ -231,6 +238,13 @@ class UserController < ApplicationController
 
   # Logs in as a user
   post '/login/?' do
+    begin
+      DigestHelper.validate_digest(request.params)
+    rescue DigestError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
+
     username_or_email = params[:username_or_email]
     username_or_email.strip
 

@@ -50,8 +50,8 @@ class User < ActiveRecord::Base
   #
   # Throws: UserCreateError
   def self.create_user(params)
-    username = params[:user][:username]
-    email = params[:user][:email]
+    username = params[:username]
+    email = params[:email]
     password = params[:password]
 
     begin

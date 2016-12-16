@@ -25,4 +25,8 @@ module LogHelper
     shared_log('User', method, o)
   end
 
+  def self.digest_helper(method, o)
+    shared_log('DigestHelper', method, o)
+  end
+
 end

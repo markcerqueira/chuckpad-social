@@ -27,34 +27,34 @@ class Patch < ActiveRecord::Base
   #
   # Throws: PatchCreateError
   def self.create_patch(user, params)
-    if params[:patch][:data].nil?
+    if params[:patch_data].nil?
       LogHelper.patch_log('create_patch', 'Patch data is required for creating a patch')
       raise PatchCreateError, "Some data is required to create a patch."
     end
 
     # Make sure file is below file size limit
-    if File.size(params[:patch][:data][:tempfile]) > MAX_PATCH_FILE_SIZE_BYTES
+    if File.size(params[:patch_data][:tempfile]) > MAX_PATCH_FILE_SIZE_BYTES
       LogHelper.patch_log('create_patch', 'Patch data is too large')
       raise PatchCreateError, "Patch file is too large. The maximum allowed is #{MAX_PATCH_FILE_SIZE_KB} KB."
     end
 
-    if File.size(params[:patch][:data][:tempfile]) == 0
+    if File.size(params[:patch_data][:tempfile]) == 0
       LogHelper.patch_log('create_patch', 'Patch data is empty')
       raise PatchCreateError, "File contains no data. Please upload some data with your patch."
     end
 
-    if params[:patch][:extra_data] != nil
-      if File.size(params[:patch][:extra_data][:tempfile]) > MAX_PATCH_FILE_SIZE_BYTES
+    if params[:patch_extra_data] != nil
+      if File.size(params[:patch_extra_data][:tempfile]) > MAX_PATCH_FILE_SIZE_BYTES
         LogHelper.patch_log('create_patch', 'Patch extra data is large')
         raise PatchCreateError, "Extra data for this patch is too large. The maximum allowed is #{MAX_PATCH_FILE_SIZE_KB} KB."
       end
     end
 
-    patch_data = params[:patch][:data][:tempfile].read
+    patch_data = params[:patch_data][:tempfile].read
     patch_data_digest = Digest::SHA256.hexdigest patch_data
 
     # Make sure the file uploaded has not already been uploaded by the user
-    if Patch.where(creator_id: user.id, data_hash: patch_data_digest, patch_type: params[:patch][:type].to_i).present?
+    if Patch.where(creator_id: user.id, data_hash: patch_data_digest, patch_type: params[:patch_type].to_i).present?
       LogHelper.patch_log('create_patch', 'User attempting to create patch with same data')
       raise PatchCreateError, 'A patch with this data has already been uploaded.'
     end
@@ -62,10 +62,10 @@ class Patch < ActiveRecord::Base
     # Create patch
     patch = Patch.new do |p|
       p.guid = SecureRandom.hex(12)
-      p.name = (params[:patch][:name] || '')
-      p.description = (params[:patch][:description] || '')
-      p.patch_type = params[:patch][:type].to_i
-      p.parent_guid = (params[:patch][:parent_guid] || nil)
+      p.name = (params[:patch_name] || '')
+      p.description = (params[:patch_description] || '')
+      p.patch_type = params[:patch_type].to_i
+      p.parent_guid = (params[:patch_parent_guid] || nil)
       p.data = patch_data
       p.creator_id = user.id
       p.revision = 1
@@ -74,12 +74,12 @@ class Patch < ActiveRecord::Base
       p.download_count = 0
       p.data_hash = patch_data_digest
 
-      if params[:patch].has_key?('hidden')
-        p.hidden = params[:patch][:hidden]
+      if params[:patch_hidden].present?
+        p.hidden = params[:patch_hidden]
       end
 
-      if params[:patch][:extra_data] != nil
-        p.extra_data = params[:patch][:extra_data][:tempfile].read
+      if params[:patch_extra_data] != nil
+        p.extra_data = params[:patch_extra_data][:tempfile].read
       end
     end
 
