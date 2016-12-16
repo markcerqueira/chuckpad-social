@@ -10,6 +10,7 @@ require 'sendgrid-ruby'
 require 'strong_password'
 
 require './extensions/string_extension'
+require './extensions/vash'
 
 require './models/abuse_report'
 require './models/auth_token'
