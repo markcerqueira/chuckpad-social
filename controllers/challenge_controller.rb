@@ -3,8 +3,8 @@ require './controllers/application_controller'
 # ACME Challenge responder
 # See: https://github.com/dmathieu/sabayon
 class ChallengeController < ApplicationController
-  # Returns information for patch with parameter guid in JSON format
-  get '/.well-known/acme-challenge/:token' do
+
+  get '/acme-challenge/:token' do
     data = []
     if ENV['ACME_KEY'] && ENV['ACME_TOKEN']
       data << { key: ENV['ACME_KEY'], token: ENV['ACME_TOKEN'] }
@@ -18,11 +18,19 @@ class ChallengeController < ApplicationController
     end
 
     data.each do |e|
-      if env['PATH_INFO'] == "/.well-known/acme-challenge/#{e[:token]}"
+      if env['PATH_INFO'] == "/acme-challenge/#{e[:token]}"
         status 200
         content_type 'text/plain'
-        body [e[:key]]
+        body "#{[e[:key]]}"
+        "#{[e[:key]]}"
+        return
       end
     end
+
+    status 500
+    content_type 'text/plain'
+    body 'No key found'
+    'No key found'
   end
+  
 end
