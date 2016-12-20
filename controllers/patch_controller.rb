@@ -147,45 +147,12 @@ class PatchController < ApplicationController
       return
     end
 
-    data = params[:patch_data]
-    unless data.nil?
-      if File.size(params[:patch_data][:tempfile]) == 0
-        LogHelper.patch_controller_log('update', 'data provided is zero-length')
-        ResponseHelper.error(self, request, 'Patch cannot be updated with empty data. Please try again.')
-        return
-      end
-
-      patch.data = params[:patch_data][:tempfile].read
-      patch.data_hash = Digest::SHA256.hexdigest patch.data
-      revision_made = true
+    begin
+      patch.update_patch(params)
+      ResponseHelper.success(self, request, patch.to_json, 'Updated patch with id ' + params[:id].to_s)
+    rescue PatchUpdateError => error
+      ResponseHelper.error(self, request, error.message)
     end
-
-    name = params[:patch_name]
-    unless name.nil? || name.empty?
-      patch.name = name
-      revision_made = true
-    end
-
-    hidden = params[:patch_hidden]
-    unless hidden.nil? || hidden.empty?
-      patch.hidden = hidden
-      revision_made = true
-    end
-
-    description = params[:patch_description]
-    unless description.nil? || description.empty?
-      patch.description = description
-      revision_made = true
-    end
-
-    if revision_made
-      patch.updated_at = DateTime.now.new_offset(0)
-      patch.revision = patch.revision + 1
-      patch.save
-    end
-
-    # TODO Switch on if a change was made?
-    ResponseHelper.success(self, request, patch.to_json, 'Updated patch with id ' + params[:id].to_s)
   end
 
   # Returns information for patch with parameter guid in JSON format
@@ -261,6 +228,7 @@ class PatchController < ApplicationController
     patch.data
   end
 
+  # Returns data for extra meta-data resource
   get '/download/extra/:guid/?' do
     patch, error = get_patch('download/extra', request, params[:guid])
     if error

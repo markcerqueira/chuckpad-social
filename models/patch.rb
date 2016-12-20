@@ -91,6 +91,48 @@ class Patch < ActiveRecord::Base
     return patch
   end
 
+  # Updates the patch this method is called on with inputs from the given params hash.
+  # Throws an error with a message if anything goes wrong during the update process.
+  #
+  # Throws: PatchUpdateError
+  def update_patch(params)
+    data = params[:patch_data]
+    unless data.nil?
+      if File.size(params[:patch_data][:tempfile]) == 0
+        LogHelper.patch_log('update_patch', 'data provided is zero-length')
+        raise PatchUpdateError, 'Patch cannot be updated with empty data. Please try again.'
+      end
+
+      self.data = params[:patch_data][:tempfile].read
+      self.data_hash = Digest::SHA256.hexdigest patch.data
+      revision_made = true
+    end
+
+    name = params[:patch_name]
+    unless name.nil? || name.empty?
+      self.name = name
+      revision_made = true
+    end
+
+    hidden = params[:patch_hidden]
+    unless hidden.nil? || hidden.empty?
+      self.hidden = hidden
+      revision_made = true
+    end
+
+    description = params[:patch_description]
+    unless description.nil? || description.empty?
+      self.description = description
+      revision_made = true
+    end
+
+    if revision_made
+      self.updated_at = DateTime.now.new_offset(0)
+      self.revision = self.revision + 1
+      self.save
+    end
+  end
+
   # Converts patch to json using to_hash method
   def as_json(options)
     to_hash()
