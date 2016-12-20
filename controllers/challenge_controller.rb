@@ -21,8 +21,8 @@ class ChallengeController < ApplicationController
       if env['PATH_INFO'] == "/acme-challenge/#{e[:token]}"
         status 200
         content_type 'text/plain'
-        body "#{[e[:key]]}"
-        "#{[e[:key]]}"
+        body "#{e[:key]}"
+        "#{e[:key]}"
         return
       end
     end
@@ -32,5 +32,5 @@ class ChallengeController < ApplicationController
     body 'No key found'
     'No key found'
   end
-  
+
 end
