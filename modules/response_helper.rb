@@ -43,6 +43,12 @@ module ResponseHelper
     controller.respond(CODE_SUCCESS, message)
   end
 
+  # Responds for a resource error (raw data versus having us respond with a 200 HTTP response code and embedding the
+  # error code in the 'code' field).
+  def self.resource_error(controller)
+    controller.respond_resource_error()
+  end
+
   # Private Implementation Methods
 
   # Cheesy overloaded method courtesy of http://rubylearning.com/satishtalim/ruby_overloading_methods.html

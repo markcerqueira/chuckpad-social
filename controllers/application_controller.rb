@@ -69,6 +69,11 @@ class ApplicationController < Sinatra::Base
     body response_body
   end
 
+  # Resource errors should 404 directly
+  def respond_resource_error()
+    status 404
+  end
+
   # Redirects to target page setting status message to passed msg
   def redirect_to_index_with_status_msg(controller, msg)
     session[:status] = msg

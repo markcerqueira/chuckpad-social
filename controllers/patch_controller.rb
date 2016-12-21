@@ -7,7 +7,6 @@ class PatchController < ApplicationController
 
   # Index page that shows index.erb and lists all patches
   get '/' do
-    LogHelper.patch_controller_log('', nil)
     @latest_status_message = session[:status]
     @patches = Patch.order('id DESC').all
 
@@ -107,6 +106,13 @@ class PatchController < ApplicationController
   # Returns patches for the given user in JSON format. If the id requested belongs to the user making the request,
   # hidden patches will be returned; otherwise only non-hidden patches will be returned.
   get '/user/:id/?' do
+    begin
+      user = User.get_user(id: params[:id].to_i)
+    rescue UserNotFoundError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
+
     show_hidden = false
     begin
       user = User.get_user_from_params(request, params)
@@ -143,15 +149,14 @@ class PatchController < ApplicationController
   get '/download/:guid/?' do
     begin
       patch = Patch.get_patch(params[:guid])
-    rescue PatchNotFoundError => error
-      ResponseHelper.error(self, request, error.message)
+    rescue PatchNotFoundError
+      ResponseHelper.resource_error(self)
       return
     end
 
     patch.download_count += 1
     patch.save
 
-    # Downloads the patch data
     attachment patch.name
     content_type 'application/octet-stream'
     patch.data
@@ -162,7 +167,7 @@ class PatchController < ApplicationController
     begin
       patch = Patch.get_patch(params[:guid])
     rescue PatchNotFoundError => error
-      ResponseHelper.error(self, request, error.message)
+      ResponseHelper.resource_error(self)
       return
     end
 

@@ -152,7 +152,7 @@ class Patch < ActiveRecord::Base
     current_user = User.get_user_from_params(request, params)
     patch = Patch.get_patch(params[:guid])
     if current_user.id != patch.creator_id
-      raise PatchPersmissionError
+      raise PatchPermissionError
     end
     return patch
   end
