@@ -23,63 +23,35 @@ class PatchController < ApplicationController
   end
 
   # Gets patch with passed patch_id
-  def get_patch(caller, request, guid, fail_quietly = false)
+  def get_patch(caller, request, guid)
     patch = Patch.find_by_guid(guid)
     if patch.nil?
       LogHelper.patch_controller_log(caller, 'No patch found')
-      unless fail_quietly
-        ResponseHelper.error(self, request, 'Unable to find patch with guid ' + params[:guid].to_s)
-      end
-
+      ResponseHelper.error(self, request, 'Unable to find patch with guid ' + params[:guid].to_s)
       return nil, true
     end
 
     return patch, false
   end
 
-  # Gets user supporting both web and iOS-based queries
-  def get_user_from_params(caller, request, params, fail_quietly = false)
-    begin
-      if from_native_client(request)
-        # Native clients: this will throw a UserNotFoundError/AuthTokenInvalidError if we can't find user or auth token is invalid
-        current_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
-      else
-        # Web clients: we know they are authenticated if session[:user_id] exists
-        current_user = User.get_user(id: session[:user_id])
-      end
-      return current_user, false
-    rescue UserNotFoundError
-      LogHelper.patch_controller_log(caller, 'No valid user found and fail_quietly = ' + fail_quietly.to_s)
-      unless fail_quietly
-        ResponseHelper.error(self, request, 'This call requires a logged in user')
-      end
-    rescue AuthTokenInvalidError
-      LogHelper.patch_controller_log(caller, 'Invalid auth token found and fail_quietly = ' + fail_quietly.to_s)
-      unless fail_quietly
-        ResponseHelper.auth_error(self, request, 'Your auth token is invalid. Please log in again.')
-      end
-    end
-
-    # nil = no (validated) user found, true = found an error
-    return nil, true
-  end
-
   # Returns a patch and false if an authenticated user is found and has permission to modify a patch
   # Nil (no patch) and true (error) are returned in every other case
-  def get_user_authenticated_and_modifiable_patch(caller, request, params, fail_quietly = false)
-    patch, error = get_patch(caller, request, params[:guid], fail_quietly)
+  def get_user_authenticated_and_modifiable_patch(caller, request, params)
+    patch, error = get_patch(caller, request, params[:guid])
     if error
       LogHelper.patch_controller_log(caller, 'get_patch call had an error')
       return nil, true
     end
 
-    current_user, error = get_user_from_params(caller, request, params, fail_quietly)
-    if error
+    # User must be logged in to get a modifiable patch
+    begin
+      current_user = User.get_user_from_params(request, params)
+    rescue StandardError => error
       LogHelper.patch_controller_log(caller, 'get_user call had an error')
       return nil, true
     end
 
-    unless user_can_modify_patch(caller, request, current_user, patch, fail_quietly)
+    unless user_can_modify_patch(caller, request, current_user, patch)
       LogHelper.patch_controller_log(caller, 'user_can_modify_patch call had an error')
       return nil, true
     end
@@ -114,12 +86,14 @@ class PatchController < ApplicationController
     end
 
     # User must be logged in to create a patch
-    current_user, error = get_user_from_params('create', request, params)
-    if error
-      LogHelper.patch_controller_log('create', 'get_user call had an error')
+    begin
+      current_user = User.get_user_from_params(request, params)
+    rescue StandardError => error
+      ResponseHelper.get_user_error(self, request, error)
       return
     end
 
+    # Create the patch
     begin
       patch = Patch.create_patch(current_user, params)
       ResponseHelper.success(self, request, patch.to_json, 'Patch created with id = ' + patch.id.to_s)
@@ -168,23 +142,26 @@ class PatchController < ApplicationController
 
   # Returns patches for the logged in user in JSON format
   get '/my/?' do
-    current_user, error = get_user_from_params('my', request, params, false)
-    if error
-      LogHelper.patch_controller_log('my', 'get_user call had an error')
+    # To get my patches, there must be a user logged in
+    begin
+      current_user = User.get_user_from_params(request, params)
+    rescue StandardError => error
+      ResponseHelper.get_user_error(self, request, error)
       return
     end
 
     ResponseHelper.success_with_json_msg(self, Patch.where(creator_id: current_user.id, patch_type: params[:type].to_i).to_json)
   end
 
-  # Returns patches for the given user in JSON format
-  # If the id requested belongs to the user making the request, hidden patches will be returned;
-  # otherwise only non-hidden patches will be returned
+  # Returns patches for the given user in JSON format. If the id requested belongs to the user making the request,
+  # hidden patches will be returned; otherwise only non-hidden patches will be returned.
   get '/user/:id/?' do
     show_hidden = false
-    current_user, error = get_user_from_params('user', request, params, true)
-    unless current_user.nil?
-      show_hidden = current_user.id.to_i == params[:id].to_i
+    begin
+      user = User.get_user_from_params(request, params)
+      show_hidden = user.id.to_i == params[:id].to_i
+    rescue StandardError => error
+      # Ignore. If we don't find a user we will only show visible patches.
     end
 
     patches = Patch.where(creator_id: params[:id])
@@ -268,9 +245,10 @@ class PatchController < ApplicationController
     end
 
     # User must be logged in to report an abusive patch
-    current_user, error = get_user_from_params('report', request, params)
-    if error
-      LogHelper.patch_controller_log('report', 'get_user call had an error')
+    begin
+      current_user = User.get_user_from_params(request, params)
+    rescue StandardError => error
+      ResponseHelper.get_user_error(self, request, error)
       return
     end
 

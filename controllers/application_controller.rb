@@ -21,6 +21,7 @@ require './modules/digest_helper'
 require './modules/log_helper'
 require './modules/mail_helper'
 require './modules/response_helper'
+require './modules/request_helper'
 
 require './errors/auth_token_invalid_error'
 require './errors/digest_error'
@@ -30,8 +31,6 @@ require './errors/user_create_error'
 require './errors/user_not_found_error'
 
 class ApplicationController < Sinatra::Base
-
-  CHUCKPAD_SOCIAL_IOS = 'chuckpad-social-ios'
 
   # Tell Sinatra about special MIME types
   # http://stackoverflow.com/a/18574464/265791
@@ -53,11 +52,6 @@ class ApplicationController < Sinatra::Base
       :path => '/',
       :expire_after => 2592000, # 30 days in seconds
       :secret => ENV['RACK_COOKIE_SECRET'].to_s
-
-  # Returns true if the request is being made from a "native" (e.g. iOS) client
-  def from_native_client(request)
-    return request.user_agent.include? CHUCKPAD_SOCIAL_IOS
-  end
 
   def respond(code, msg)
     # Even for errors we want the HTTP request to succeed so set it this status to 200. If there are other errors we

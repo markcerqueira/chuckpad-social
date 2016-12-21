@@ -183,7 +183,7 @@ class UserController < ApplicationController
 
   post '/password/change/?' do
     begin
-      if from_native_client(request)
+      if RequestHelper.from_native_client(request)
         logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
       else
         logged_in_user = User.get_user(id: session[:user_id])
@@ -220,7 +220,7 @@ class UserController < ApplicationController
     LogHelper.user_controller_log('logout', params)
 
     # Logging out on web
-    unless from_native_client(request)
+    unless RequestHelper.from_native_client(request)
       user_id = session[:user_id]
       session[:user_id] = nil
       redirect_to_index_with_status_msg('Logged out user with id ' + user_id.to_s)
@@ -288,7 +288,7 @@ class UserController < ApplicationController
       return
     end
 
-    if from_native_client(request)
+    if RequestHelper.from_native_client(request)
       auth_token = AuthToken.generate_token(user)
       auth_token_value = (user.as_json(nil, auth_token.auth_token))
     end

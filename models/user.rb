@@ -7,9 +7,8 @@ class User < ActiveRecord::Base
   MIN_USERNAME_LENGTH = 2
   MAX_USERNAME_LENGTH = 20
 
-  # Find a user by id, username, or email. If multiple params are passed
-  # they will search in order declared (e.g. search by id first, username
-  # second, email third, confirm_token fourth).
+  # Find a user by id, username, or email. If multiple params are passed  they will search in order declared
+  # (e.g. search by id first, username second, email third, confirm_token fourth).
   #
   # Throws: UserNotFoundError
   def self.get_user(id: -1, username: nil, email: nil, confirm_token: nil)
@@ -25,9 +24,22 @@ class User < ActiveRecord::Base
     end
   end
 
-  # Finds user by username or email (using logic in get_user function) and
-  # then verifies that the provided auth_token is valid. If the user is not
-  # found or the auth_token is not found, nil is returned.
+  # Get authenticated user from the params object. This call supports both web and native-based APIs so the request
+  # object is required.
+  #
+  # Throws UserNotFoundError, AuthTokenInvalidError
+  def self.get_user_from_params(request, params)
+    if RequestHelper.from_native_client(request)
+      # Native clients: this will throw a UserNotFoundError/AuthTokenInvalidError if we can't find user or auth token is invalid
+      return User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
+    else
+      # Web clients: we know they are authenticated if session[:user_id] exists
+      return User.get_user(id: session[:user_id])
+    end
+  end
+
+  # Finds user by username or email (using logic in get_user function) and  then verifies that the provided auth_token
+  # is valid. If the user is not found or the auth_token is not found, nil is returned.
   #
   # Throws: UserNotFoundError, AuthTokenInvalidError
   def self.get_user_with_verification(username, email, auth_token)
@@ -45,8 +57,8 @@ class User < ActiveRecord::Base
     raise AuthTokenInvalidError
   end
 
-  # Helper method that creates a user from the params given, saves it, and returns it.
-  # Throws an error with a message if anything goes wrong during the creation process.
+  # Helper method that creates a user from the params given, saves it, and returns it. Throws an error with a message
+  # if anything goes wrong during the creation process.
   #
   # Throws: UserCreateError
   def self.create_user(params)
@@ -151,17 +163,6 @@ class User < ActiveRecord::Base
       # Only add the auth token if we passed it in
       h['auth_token'] = auth_token unless auth_token.blank?
     end
-  end
-
-  # Used on the web page
-  def get_patch_count
-    all_patches = patches
-
-    all_count     = all_patches.count
-    visible_count = all_patches.visible.count
-    hidden_count  = all_count - visible_count
-
-    "#{all_count}/#{visible_count}/#{hidden_count}"
   end
 
 end

@@ -25,6 +25,14 @@ module ResponseHelper
     end
   end
 
+  def self.get_user_error(controller, request, error)
+    if error.is_a?(AuthTokenInvalidError)
+      auth_error(controller, request, error.message)
+    else
+      error(controller, request, error.message)
+    end
+  end
+
   # Responds with an invalid auth token error code to the caller.
   def self.auth_error(controller, request, message)
     handle_message(CODE_INVALID_AUTH, controller, request, message, message)
@@ -52,7 +60,7 @@ module ResponseHelper
   end
 
   def self.handle_message(code, controller, request, native_message, web_message)
-    if controller.from_native_client(request)
+    if RequestHelper.from_native_client(request)
       controller.respond(code, native_message)
     else
       controller.redirect_to_index_with_status_msg(controller, web_message)
