@@ -31,20 +31,20 @@ class User < ActiveRecord::Base
   def self.get_user_from_params(request, params)
     if RequestHelper.from_native_client(request)
       # Native clients: this will throw a UserNotFoundError/AuthTokenInvalidError if we can't find user or auth token is invalid
-      return User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
+      return User.get_user_with_verification(params[:user_id], params[:auth_token])
     else
       # Web clients: we know they are authenticated if session[:user_id] exists
       return User.get_user(id: session[:user_id])
     end
   end
 
-  # Finds user by username or email (using logic in get_user function) and  then verifies that the provided auth_token
-  # is valid. If the user is not found or the auth_token is not found, nil is returned.
+  # Finds user by id and then verifies that the provided auth_token is valid for that user. If the user is not found or
+  # the auth_token is not found, respective errors are raised.
   #
   # Throws: UserNotFoundError, AuthTokenInvalidError
-  def self.get_user_with_verification(username, email, auth_token)
+  def self.get_user_with_verification(id, auth_token)
     # This can throw a UserNotFoundError
-    user = get_user(username: username, email: email)
+    user = get_user(id: id)
 
     authToken = AuthToken.find_by_auth_token(auth_token)
     if !authToken.nil? && user.id == authToken.user_id

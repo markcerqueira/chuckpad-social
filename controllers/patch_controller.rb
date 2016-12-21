@@ -5,60 +5,6 @@ class PatchController < ApplicationController
   # Used by /patches/new
   RECENT_PATCHES_TO_RETURN = 20
 
-  # Returns true if the passed user has permissions to modify the patch
-  def user_can_modify_patch(caller, request, current_user, patch, fail_quietly = false)
-    if current_user.admin
-      return true
-    end
-
-    if current_user.id == patch.creator_id
-      return true;
-    end
-
-    unless fail_quietly
-      ResponseHelper.error(self, request, 'User does not have permission to modify patch with guid ' + patch.guid.to_s)
-    end
-
-    return false
-  end
-
-  # Gets patch with passed patch_id
-  def get_patch(caller, request, guid)
-    patch = Patch.find_by_guid(guid)
-    if patch.nil?
-      LogHelper.patch_controller_log(caller, 'No patch found')
-      ResponseHelper.error(self, request, 'Unable to find patch with guid ' + params[:guid].to_s)
-      return nil, true
-    end
-
-    return patch, false
-  end
-
-  # Returns a patch and false if an authenticated user is found and has permission to modify a patch
-  # Nil (no patch) and true (error) are returned in every other case
-  def get_user_authenticated_and_modifiable_patch(caller, request, params)
-    patch, error = get_patch(caller, request, params[:guid])
-    if error
-      LogHelper.patch_controller_log(caller, 'get_patch call had an error')
-      return nil, true
-    end
-
-    # User must be logged in to get a modifiable patch
-    begin
-      current_user = User.get_user_from_params(request, params)
-    rescue StandardError => error
-      LogHelper.patch_controller_log(caller, 'get_user call had an error')
-      return nil, true
-    end
-
-    unless user_can_modify_patch(caller, request, current_user, patch)
-      LogHelper.patch_controller_log(caller, 'user_can_modify_patch call had an error')
-      return nil, true
-    end
-
-    return patch, false
-  end
-
   # Index page that shows index.erb and lists all patches
   get '/' do
     LogHelper.patch_controller_log('', nil)
@@ -114,10 +60,14 @@ class PatchController < ApplicationController
       return
     end
 
-    patch, error = get_user_authenticated_and_modifiable_patch('update', request, params)
-    if patch.nil? or error.present?
-      LogHelper.patch_controller_log('update', 'get_user_authenticated_and_modifiable_patch call had an error')
-      ResponseHelper.error(self, request, 'There was an error finding the patch to update. Please try again.')
+    # Get a "modifiable" patch (this requires an authenticated user that owns the patch)
+    begin
+      patch = Patch.get_modifiable_patch(request, params)
+    rescue UserNotFoundError, AuthTokenInvalidError => error
+      ResponseHelper.get_user_error(self, request, error)
+      return
+    rescue PatchNotFoundError, PatchPermissionError => error
+      ResponseHelper.error(self, request, error.message)
       return
     end
 
@@ -131,9 +81,10 @@ class PatchController < ApplicationController
 
   # Returns information for patch with parameter guid in JSON format
   get '/info/:guid/?' do
-    patch, error = get_patch('json/info', request, params[:guid])
-    if error
-      LogHelper.patch_controller_log('json/info', 'get_patch call had an error')
+    begin
+      patch = Patch.get_patch(params[:guid])
+    rescue PatchNotFoundError => error
+      ResponseHelper.error(self, request, error.message)
       return
     end
 
@@ -190,9 +141,10 @@ class PatchController < ApplicationController
 
   # Downloads patch file for given patch id
   get '/download/:guid/?' do
-    patch, error = get_patch('download', request, params[:guid])
-    if error
-      LogHelper.patch_controller_log('download', 'get_patch call had an error')
+    begin
+      patch = Patch.get_patch(params[:guid])
+    rescue PatchNotFoundError => error
+      ResponseHelper.error(self, request, error.message)
       return
     end
 
@@ -207,9 +159,10 @@ class PatchController < ApplicationController
 
   # Returns data for extra meta-data resource
   get '/download/extra/:guid/?' do
-    patch, error = get_patch('download/extra', request, params[:guid])
-    if error
-      LogHelper.patch_controller_log('download/extra', 'get_patch call had an error')
+    begin
+      patch = Patch.get_patch(params[:guid])
+    rescue PatchNotFoundError => error
+      ResponseHelper.error(self, request, error.message)
       return
     end
 
@@ -222,9 +175,14 @@ class PatchController < ApplicationController
   get '/delete/:guid/?' do
     # LogHelper.patch_controller_log('delete', nil)
 
-    patch, error = get_user_authenticated_and_modifiable_patch('delete', request, params)
-    if error
-      LogHelper.patch_controller_log('delete', 'get_user_authenticated_and_modifiable_patch call had an error')
+    # Get a "modifiable" patch (this requires an authenticated user that owns the patch)
+    begin
+      patch = Patch.get_modifiable_patch(request, params)
+    rescue UserNotFoundError, AuthTokenInvalidError => error
+      ResponseHelper.get_user_error(self, request, error)
+      return
+    rescue PatchNotFoundError, PatchPermissionError => error
+      ResponseHelper.error(self, request, error.message)
       return
     end
 

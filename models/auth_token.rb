@@ -16,8 +16,8 @@ class AuthToken < ActiveRecord::Base
     return auth_token
   end
 
-  def self.invalidate_token(username, email, auth_token)
-    user = User.get_user(username: username, email: email)
+  def self.invalidate_token(user_id, auth_token)
+    user = User.get_user(id: user_id)
     authToken = AuthToken.find_by_auth_token(auth_token)
 
     if !user.nil? && !authToken.nil? && user.id == authToken.user_id

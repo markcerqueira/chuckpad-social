@@ -133,6 +133,30 @@ class Patch < ActiveRecord::Base
     end
   end
 
+  # Returns the patch with the given guid. Throws an error with a message if no patch is found.
+  #
+  # Throws: PatchNotFoundError
+  def self.get_patch(guid)
+    patch = Patch.find_by_guid(guid)
+    if patch.nil?
+      raise PatchNotFoundError
+    end
+    return patch
+  end
+
+  # Finds the user and the patch specified in the params and ensures that the patch specified can be modified by the
+  # user specified. Throws an error if any of the aforementioned operations fail.
+  #
+  # Throws: UserNotFoundError, AuthTokenInvalidError, PatchNotFoundError, PatchPermissionError
+  def self.get_modifiable_patch(request, params)
+    current_user = User.get_user_from_params(request, params)
+    patch = Patch.get_patch(params[:guid])
+    if current_user.id != patch.creator_id
+      raise PatchPersmissionError
+    end
+    return patch
+  end
+
   # Converts patch to json using to_hash method
   def as_json(options)
     to_hash()

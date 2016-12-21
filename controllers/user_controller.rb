@@ -182,19 +182,11 @@ class UserController < ApplicationController
   end
 
   post '/password/change/?' do
+    # User must be logged in to change password
     begin
-      if RequestHelper.from_native_client(request)
-        logged_in_user = User.get_user_with_verification(params[:username], params[:email], params[:auth_token])
-      else
-        logged_in_user = User.get_user(id: session[:user_id])
-      end
-    rescue UserNotFoundError
-      LogHelper.user_controller_log('password/change', 'No user found')
-      ResponseHelper.error(self, request, 'Could not find user', 'Unable to change password as no user is currently logged in')
-      return
-    rescue AuthTokenInvalidError
-      LogHelper.user_controller_log('password/change', 'Invalid auth token found and fail_quietly = ' + fail_quietly.to_s)
-      ResponseHelper.auth_error(self, request, 'Your auth token is invalid. Please log in again.')
+      logged_in_user = User.get_user_from_params(request, params)
+    rescue StandardError => error
+      ResponseHelper.get_user_error(self, request, error)
       return
     end
 
@@ -227,7 +219,7 @@ class UserController < ApplicationController
     end
 
     # Logging out on native clients
-    token_invalidated = AuthToken.invalidate_token(params[:username], params[:email], params[:auth_token])
+    token_invalidated = AuthToken.invalidate_token(params[:user_id], params[:auth_token])
 
     if token_invalidated
       ResponseHelper.success(self, request, 'Successfully logged out')
