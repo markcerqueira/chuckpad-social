@@ -215,45 +215,16 @@ class PatchController < ApplicationController
       return
     end
 
-    patch = Patch.find_by_guid(params[:guid])
-
-    # This can happen if a user is reporting a patch that was deleted
-    if patch.nil?
-      ResponseHelper.success(self, request, 'Patch has already been deleted by creator')
+    # Ensure the patch still exists
+    begin
+      patch = Patch.get_patch(params[:guid])
+    rescue PatchNotFoundError => error
+      ResponseHelper.error(self, request, error.message)
       return
     end
 
-    # See if a AbuseReport record already exists
-    abuse_report = AbuseReport.where(patch_id: patch.id, user_id: current_user.id).first
-    
-    if abuse_report.nil? && params[:is_abuse] == "1"
-      LogHelper.patch_controller_log('report', "reporting patch with id #{patch.id}")
-      abuse_report = AbuseReport.new do |r|
-        r.user_id = current_user.id
-        r.patch_id = patch.id
-      end
-
-      patch.abuse_count = patch.abuse_count + 1
-
-      abuse_report.save
-      patch.save
-
-      return_string = 'Patch abuse report received'
-    elsif abuse_report.present? && params[:is_abuse] != "1"
-      LogHelper.patch_controller_log('report', "rescinding report for patch with id #{patch.id}")
-      abuse_report.delete
-
-      patch.abuse_count = patch.abuse_count - 1
-      patch.save
-
-      return_string = 'Patch abuse report undone'
-    else
-      # Client and server state are somehow inconsistent
-      LogHelper.patch_controller_log('report', 'No valid branches to handle report abuse')
-      return_string = 'Patch report received'
-    end
-
-    ResponseHelper.success(self, request, return_string)
+    result_string = AbuseReport.create_or_delete(patch, current_user.id, params[:is_abuse] == "1")
+    ResponseHelper.success(self, request, result_string)
   end
 
 end
