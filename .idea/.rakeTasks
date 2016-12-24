@@ -4,4 +4,4 @@ You are allowed to:
 1. Remove rake task
 2. Add existing rake tasks
 To add existing rake tasks automatically delete this file and reload the project.
---><RakeGroup description="" fullCmd="" taksId="rake"><RakeGroup description="" fullCmd="" taksId="config_env"><RakeTask description="Configure Heroku according to config_env" fullCmd="config_env:heroku[app]" taksId="heroku[app]" /><RakeTask description="" fullCmd="config_env:heroku" taksId="heroku" /></RakeGroup><RakeGroup description="" fullCmd="" taksId="db"><RakeTask description="create an ActiveRecord migration in ./db/migrate" fullCmd="db:create_migration" taksId="create_migration" /><RakeTask description="migrate the database (use version with VERSION=n)" fullCmd="db:migrate" taksId="migrate" /><RakeTask description="roll back the migration (use steps with STEP=n)" fullCmd="db:rollback" taksId="rollback" /></RakeGroup><RakeTask description="Run tests" fullCmd="test" taksId="test" /></RakeGroup></Settings>
+--><RakeGroup description="" fullCmd="" taksId="rake" /></Settings>
