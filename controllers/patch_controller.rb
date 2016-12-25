@@ -41,6 +41,7 @@ class PatchController < ApplicationController
     # Create the patch
     begin
       patch = Patch.create_patch(current_user, params)
+      AnalyticsHelper.track_event(category: 'patch', action: 'create')
       ResponseHelper.success(self, request, patch.to_json, 'Patch created with id = ' + patch.id.to_s)
     rescue PatchCreateError => error
       ResponseHelper.error(self, request, error.message)
@@ -72,6 +73,7 @@ class PatchController < ApplicationController
 
     begin
       patch.update_patch(params)
+      AnalyticsHelper.track_event(category: 'patch', action: 'update')
       ResponseHelper.success(self, request, patch.to_json, 'Updated patch with id ' + params[:id].to_s)
     rescue PatchUpdateError => error
       ResponseHelper.error(self, request, error.message)
@@ -157,6 +159,8 @@ class PatchController < ApplicationController
     patch.download_count += 1
     patch.save
 
+    AnalyticsHelper.track_event(category: 'patch', action: 'download', label: 'guid', value: params[:guid])
+
     attachment patch.name
     content_type 'application/octet-stream'
     patch.data
@@ -170,6 +174,8 @@ class PatchController < ApplicationController
       ResponseHelper.resource_error(self)
       return
     end
+
+    AnalyticsHelper.track_event(category: 'patch', action: 'download/extra', label: 'guid', value: params[:guid])
 
     attachment patch.name
     content_type 'application/octet-stream'
@@ -192,6 +198,8 @@ class PatchController < ApplicationController
     end
 
     patch.delete
+
+    AnalyticsHelper.track_event(category: 'patch', action: 'delete', label: 'guid', value: params[:guid])
 
     ResponseHelper.success(self, request, 'Successfully deleted patch')
   end
@@ -224,6 +232,9 @@ class PatchController < ApplicationController
     end
 
     result_string = AbuseReport.create_or_delete(patch, current_user.id, params[:is_abuse] == "1")
+
+    AnalyticsHelper.track_event(category: 'patch', action: 'report')
+
     ResponseHelper.success(self, request, result_string)
   end
 
