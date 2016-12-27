@@ -98,6 +98,7 @@ class UserController < ApplicationController
 
     MailHelper.send_email(user.email, subject, html_body)
 
+    AnalyticsHelper.track_user_event(action: 'password/reset', params: params)
     ResponseHelper.success(self, request, 'Password reset sent via email.')
   end
 
@@ -155,6 +156,7 @@ class UserController < ApplicationController
 
     send_confirmation_email(user, request)
 
+    AnalyticsHelper.track_user_event(action: 'create', params: params)
     ResponseHelper.success(self, request, user.as_json(nil, auth_token.auth_token), 'User created with id ' + user.id.to_s)
   end
 
@@ -204,6 +206,7 @@ class UserController < ApplicationController
 
     logged_in_user.save
 
+    AnalyticsHelper.track_user_event(action: 'password/change', params: params)
     ResponseHelper.success(self, request, 'Password updated')
   end
 
@@ -222,6 +225,7 @@ class UserController < ApplicationController
     token_invalidated = AuthToken.invalidate_token(params[:user_id], params[:auth_token])
 
     if token_invalidated
+      AnalyticsHelper.track_user_event(action: 'logout', params: params)
       ResponseHelper.success(self, request, 'Successfully logged out')
     else
       ResponseHelper.error(self, request, 'Unable to log user out')
@@ -284,6 +288,8 @@ class UserController < ApplicationController
       auth_token = AuthToken.generate_token(user)
       auth_token_value = (user.as_json(nil, auth_token.auth_token))
     end
+
+    AnalyticsHelper.track_user_event(action: 'login', params: params)
     ResponseHelper.success(self, request, if auth_token_value.nil? then '' else auth_token_value end, 'Logged in successfully')
   end
 

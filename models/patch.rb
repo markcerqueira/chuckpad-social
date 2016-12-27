@@ -22,6 +22,14 @@ class Patch < ActiveRecord::Base
   scope :mini_audicle, -> { where(type: MINI_AUDICLE_TYPE) }
   scope :auraglyph, -> { where(type: AURAGLYPH_TYPE) }
 
+  def self.patch_type_to_string(params)
+    if (params[:type].to_i) == MINI_AUDICLE_TYPE
+      return 'MiniAudicle'
+    elsif (params[:type].to_i) == AURAGLYPH_TYPE
+      return 'Auraglyph'
+    end
+  end
+
   # Helper method that creates a patch from the params given, saves it, and returns it.
   # Throws an error with a message if anything goes wrong during the creation process.
   #

@@ -41,6 +41,7 @@ class PatchController < ApplicationController
     # Create the patch
     begin
       patch = Patch.create_patch(current_user, params)
+      AnalyticsHelper.track_patch_event(action: 'create', params: params)
       ResponseHelper.success(self, request, patch.to_json, 'Patch created with id = ' + patch.id.to_s)
     rescue PatchCreateError => error
       ResponseHelper.error(self, request, error.message)
@@ -72,6 +73,7 @@ class PatchController < ApplicationController
 
     begin
       patch.update_patch(params)
+      AnalyticsHelper.track_patch_event(action: 'update', params: params)
       ResponseHelper.success(self, request, patch.to_json, 'Updated patch with id ' + params[:id].to_s)
     rescue PatchUpdateError => error
       ResponseHelper.error(self, request, error.message)
@@ -87,6 +89,7 @@ class PatchController < ApplicationController
       return
     end
 
+    AnalyticsHelper.track_patch_event(action: 'info', params: params)
     ResponseHelper.success_with_json_msg(self, patch.to_json)
   end
 
@@ -100,6 +103,7 @@ class PatchController < ApplicationController
       return
     end
 
+    AnalyticsHelper.track_patch_event(action: 'my', params: params)
     ResponseHelper.success_with_json_msg(self, Patch.where(creator_id: current_user.id, patch_type: params[:type].to_i).to_json)
   end
 
@@ -127,21 +131,25 @@ class PatchController < ApplicationController
       patches.visible
     end
 
+    AnalyticsHelper.track_patch_event(action: 'user', params: params)
     ResponseHelper.success_with_json_msg(self, patches.order('id DESC').to_json)
   end
 
   # Returns recently created patches
   get '/new/?' do
+    AnalyticsHelper.track_patch_event(action: 'new', params: params)
     ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
   end
 
   # Returns all (non-hidden) featured patches as a JSON list
   get '/featured/?' do
+    AnalyticsHelper.track_patch_event(action: 'featured', params: params)
     ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, featured: true).to_json)
   end
 
   # Returns all (non-hidden) documentation patches as a JSON list
   get '/documentation/?' do
+    AnalyticsHelper.track_patch_event(action: 'documentation', params: params)
     ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, documentation: true).to_json)
   end
 
@@ -157,6 +165,9 @@ class PatchController < ApplicationController
     patch.download_count += 1
     patch.save
 
+    params[:type] = patch.patch_type
+    AnalyticsHelper.track_patch_event(action: 'download', params: params)
+
     attachment patch.name
     content_type 'application/octet-stream'
     patch.data
@@ -170,6 +181,9 @@ class PatchController < ApplicationController
       ResponseHelper.resource_error(self)
       return
     end
+
+    params[:type] = patch.patch_type
+    AnalyticsHelper.track_patch_event(action: 'download/extra', params: params)
 
     attachment patch.name
     content_type 'application/octet-stream'
@@ -193,6 +207,7 @@ class PatchController < ApplicationController
 
     patch.delete
 
+    AnalyticsHelper.track_patch_event(action: 'delete', params: params)
     ResponseHelper.success(self, request, 'Successfully deleted patch')
   end
 
@@ -224,6 +239,8 @@ class PatchController < ApplicationController
     end
 
     result_string = AbuseReport.create_or_delete(patch, current_user.id, params[:is_abuse] == "1")
+
+    AnalyticsHelper.track_patch_event(action: 'report', params: params)
     ResponseHelper.success(self, request, result_string)
   end
 
