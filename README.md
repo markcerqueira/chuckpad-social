@@ -6,14 +6,14 @@
 
 ### What is chuckpad-social?
 
-chuckpad-social is an upload-download service for ChucK patches in the MiniAudicle for iPad app. The service is designed to help people learn more about ChucK through examples and encourage people to build and share their own creations with the world. Visit [chuckpad-social on Heroku][2]. chuckpad-social has an [iOS library][6] that wraps its API. Although originally designed with ChucK and MiniAudicle, you can use chuckpad-social to share anything! chuckpad-social is built using lots of stuff including Sinatra, ActiveRecord, Postgres, and lots of gems developed by the vibrant Ruby community. 
+chuckpad-social is an upload-download service for ChucK patches in the MiniAudicle for iPad app. The service is designed to help people learn more about ChucK through examples and encourage people to build and share their own creations with the world. Visit [chuckpad-social on Heroku][2]. chuckpad-social has an [iOS library][6] that wraps its API. Although originally designed with ChucK and MiniAudicle in mind, you can use chuckpad-social to share anything and the service supports hosting different types of data! chuckpad-social is built using lots of stuff including Sinatra, ActiveRecord, Postgres, and lots of gems developed by the vibrant Ruby community. 
 
 ### Setup
 * Install RVM: `\curl -sSL https://get.rvm.io | bash`
 * When you cd into the chuckpad-social directory, you may be prompted to install the right version of Ruby. Do so if needed. Example: `rvm install ruby-2.3.1`
 * If you just installed a new version of Ruby, you'll likely need to get the bundler gem first: `gem install bundle`
 * Install the rest of the gems: `ARCHFLAGS="-arch x86_64" bundle install` If you are getting errors running this, try running `xcode-select --install` as this has [cleared up issues for other people][3].
-* Install [Postgres][4] and create the database if you have not yet. `psql` and then `CREATE DATABASE chuckpad-social;`
+* Install [Postgres][4] and create the database if you have not yet. On the command-line, run `psql` and then `CREATE DATABASE chuckpad-social;`
 * Run `bundle exec rake db:migrate` to run all migrations on the database.
 * Run the service locally: `bundle exec rerun 'rackup -p 9292'`.
 * Locally visit [localhost:9292](http://localhost:9292/). If you see connection errors when you visit this page, you need to lanuch the Postgres app! As files are changed the rerun gem will automatically reload the app.
@@ -25,7 +25,7 @@ Improvements are appreciated and always welcome! If you'd like to work on featur
 ### Related Repositories
 * [hello-chuckpad][8] is a "Hello, World" project that uses this service with a suite of unit tests to verify the interactions between this iOS library and the service. 
 * [chuckpad-social-ios][9] is the iOS API that interacts with this service.
-* [miniAudicle][10] will is the first iOS app that uses the chuckpad-social service.
+* [miniAudicle][10] is the first iOS app that uses the chuckpad-social service.
 
 ### Heroku Config Variables
 
