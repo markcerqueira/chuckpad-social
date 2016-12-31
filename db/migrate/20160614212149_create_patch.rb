@@ -30,9 +30,9 @@ class CreatePatch < ActiveRecord::Migration[5.0]
       t.datetime :created_at
       t.datetime :updated_at
 
-      # data represents the main data for the patch (e.g. the source code for a ChucK patch)
+      # The SHA256 digest for the most recent uploaded resource. This is used to avoid a user uploading the same exact
+      # patch data over and over again.
       t.string :data_hash
-      t.binary :data, :null => false
 
       # extra_data represents arbitrary meta-data associated with the patch (e.g. Auraglyph image "name")
       t.binary :extra_data

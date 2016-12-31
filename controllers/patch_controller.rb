@@ -157,6 +157,7 @@ class PatchController < ApplicationController
   get '/download/:guid/?' do
     begin
       patch = Patch.get_patch(params[:guid])
+      patch_resource = PatchResource.get_most_recent_resource(params[:guid])
     rescue PatchNotFoundError
       ResponseHelper.resource_error(self)
       return
@@ -170,14 +171,46 @@ class PatchController < ApplicationController
 
     attachment patch.name
     content_type 'application/octet-stream'
-    patch.data
+
+    patch_resource.data
+  end
+
+  get '/versions/?' do
+    begin
+      patch = Patch.get_patch(params[:guid])
+      patch_resources = PatchResource.get_resources(params[:guid])
+    rescue PatchNotFoundError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
+
+    ResponseHelper.success_with_json_msg(self, patch_resources)
+  end
+
+  get '/versions/download/:guid/:version/?' do
+    # We will only get one item in this query, but we need to use first here so we get a PatchResource instead of a
+    # PatchResourceRelation!
+    begin
+      patch_resource = PatchResource.where(patch_guid: params[:guid], version: params[:version].to_i).first
+      if patch_resource.nil?
+        raise PatchNotFoundError
+      end
+    rescue
+      ResponseHelper.resource_error(self)
+      return
+    end
+
+    attachment params[:guid]
+    content_type 'application/octet-stream'
+
+    patch_resource.data
   end
 
   # Returns data for extra meta-data resource
   get '/download/extra/:guid/?' do
     begin
       patch = Patch.get_patch(params[:guid])
-    rescue PatchNotFoundError => error
+    rescue PatchNotFoundError
       ResponseHelper.resource_error(self)
       return
     end

@@ -16,6 +16,7 @@ require './extensions/vash'
 require './models/abuse_report'
 require './models/auth_token'
 require './models/patch'
+require './models/patch_resource'
 require './models/user'
 
 require './modules/analytics_helper'

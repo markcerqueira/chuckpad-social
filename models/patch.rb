@@ -74,7 +74,6 @@ class Patch < ActiveRecord::Base
       p.description = (params[:patch_description] || '')
       p.patch_type = params[:patch_type].to_i
       p.parent_guid = (params[:patch_parent_guid] || nil)
-      p.data = patch_data
       p.creator_id = user.id
       p.revision = 1
       p.created_at = DateTime.now.new_offset(0)
@@ -90,6 +89,9 @@ class Patch < ActiveRecord::Base
         p.extra_data = params[:patch_extra_data][:tempfile].read
       end
     end
+
+    # Create the patch resource (stored in a separate database table)
+    PatchResource.create_patch_resource(patch.guid, patch_data)
 
     unless patch.save
       LogHelper.patch_log('create_patch', 'User attempting to create patch with same data')
@@ -111,8 +113,12 @@ class Patch < ActiveRecord::Base
         raise PatchUpdateError, 'Patch cannot be updated with empty data. Please try again.'
       end
 
-      self.data = params[:patch_data][:tempfile].read
-      self.data_hash = Digest::SHA256.hexdigest patch.data
+      new_data = params[:patch_data][:tempfile].read
+
+      # Create a new patch resource for the updated data (stored in a separate table in the database)
+      PatchResource.create_patch_resource(self.guid, new_data)
+
+      self.data_hash = Digest::SHA256.hexdigest new_data
       revision_made = true
     end
 
