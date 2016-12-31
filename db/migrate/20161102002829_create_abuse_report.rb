@@ -1,4 +1,4 @@
-class CreateAbuseReport < ActiveRecord::Migration
+class CreateAbuseReport < ActiveRecord::Migration[5.0]
   def up
     create_table :abuse_reports do |t|
       t.integer :user_id, :null => false

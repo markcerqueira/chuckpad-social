@@ -1,6 +1,6 @@
 # Created with the following command:
 #  => rake db:create_migration NAME=create_patch
-class CreatePatch < ActiveRecord::Migration
+class CreatePatch < ActiveRecord::Migration[5.0]
   def up
     create_table :patches do |t|
       # We want to avoid externally exposing the id because those are sequential so think of GUID as the external

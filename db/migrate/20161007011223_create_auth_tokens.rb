@@ -1,4 +1,4 @@
-class CreateAuthTokens < ActiveRecord::Migration
+class CreateAuthTokens < ActiveRecord::Migration[5.0]
   def up
     create_table :auth_tokens do |t|
       # id (primary key) from users table

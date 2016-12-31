@@ -1,4 +1,4 @@
-class CreatePasswordResetToken < ActiveRecord::Migration
+class CreatePasswordResetToken < ActiveRecord::Migration[5.0]
   def up
     create_table :password_reset_tokens do |t|
       # id (primary key) from users table

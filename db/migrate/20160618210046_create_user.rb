@@ -1,6 +1,6 @@
 # Created with the following command:
 #  => rake db:create_migration NAME=create_user
-class CreateUser < ActiveRecord::Migration
+class CreateUser < ActiveRecord::Migration[5.0]
   def up
     create_table :users do |t|
       t.string :username, :null => false
