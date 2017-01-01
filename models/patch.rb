@@ -152,7 +152,7 @@ class Patch < ActiveRecord::Base
   # Throws: PatchNotFoundError
   def self.get_patch(guid)
     patch = Patch.find_by_guid(guid)
-    if patch.nil?
+    if patch.nil? || patch.deleted
       raise PatchNotFoundError
     end
     return patch

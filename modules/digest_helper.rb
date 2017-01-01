@@ -5,7 +5,7 @@ module DigestHelper
 
   # Volatile hash constants
   HASH_TIME_TO_LIVE = 300 # 5 minutes in seconds
-  HASH_CLEANUP_LENGTH = 2000 # After we hit this number of random values we'll clean-up our hash and remove expired elements
+  HASH_CLEANUP_LENGTH = 5000 # After we hit this number of random values we'll clean-up our hash and remove expired elements
 
   @seen_random_cache = Vash.new
 

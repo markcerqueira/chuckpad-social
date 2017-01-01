@@ -36,6 +36,9 @@ class CreatePatch < ActiveRecord::Migration[5.0]
 
       # extra_data represents arbitrary meta-data associated with the patch (e.g. Auraglyph image "name")
       t.binary :extra_data
+
+      # If a patch is deleted we flag it as deleted and never return it from any API calls
+      t.boolean :deleted, :default => false
     end
   end
 

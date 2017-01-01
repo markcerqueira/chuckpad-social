@@ -104,7 +104,7 @@ class PatchController < ApplicationController
     end
 
     AnalyticsHelper.track_patch_event(action: 'my', params: params)
-    ResponseHelper.success_with_json_msg(self, Patch.where(creator_id: current_user.id, patch_type: params[:type].to_i).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(creator_id: current_user.id, patch_type: params[:type].to_i, deleted: false).to_json)
   end
 
   # Returns patches for the given user in JSON format. If the id requested belongs to the user making the request,
@@ -125,7 +125,7 @@ class PatchController < ApplicationController
       # Ignore. If we don't find a user we will only show visible patches.
     end
 
-    patches = Patch.where(creator_id: params[:id])
+    patches = Patch.where(creator_id: params[:id], deleted: false)
 
     unless show_hidden
       patches.visible
@@ -138,19 +138,19 @@ class PatchController < ApplicationController
   # Returns recently created patches
   get '/new/?' do
     AnalyticsHelper.track_patch_event(action: 'new', params: params)
-    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, deleted: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN).to_json)
   end
 
   # Returns all (non-hidden) featured patches as a JSON list
   get '/featured/?' do
     AnalyticsHelper.track_patch_event(action: 'featured', params: params)
-    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, featured: true).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, featured: true, deleted: false).to_json)
   end
 
   # Returns all (non-hidden) documentation patches as a JSON list
   get '/documentation/?' do
     AnalyticsHelper.track_patch_event(action: 'documentation', params: params)
-    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, documentation: true).to_json)
+    ResponseHelper.success_with_json_msg(self, Patch.where(patch_type: params[:type].to_i, hidden: false, documentation: true, deleted: false).to_json)
   end
 
   # Downloads patch file for given patch id
@@ -188,9 +188,11 @@ class PatchController < ApplicationController
   end
 
   get '/versions/download/:guid/:version/?' do
-    # We will only get one item in this query, but we need to use first here so we get a PatchResource instead of a
-    # PatchResourceRelation!
     begin
+      patch = Patch.get_patch(params[:guid])
+
+      # We will only get one item in this query, but we need to use first here so we get a PatchResource instead of a
+      # PatchResourceRelation!
       patch_resource = PatchResource.where(patch_guid: params[:guid], version: params[:version].to_i).first
       if patch_resource.nil?
         raise PatchNotFoundError
@@ -238,7 +240,8 @@ class PatchController < ApplicationController
       return
     end
 
-    patch.delete
+    patch.deleted = true
+    patch.save
 
     AnalyticsHelper.track_patch_event(action: 'delete', params: params)
     ResponseHelper.success(self, request, 'Successfully deleted patch')
