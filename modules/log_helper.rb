@@ -33,4 +33,8 @@ module LogHelper
     shared_log('AnalyticsHelper', method, o)
   end
 
+  def self.mail_helper(method, o)
+    shared_log('MailHelper', method, o)
+  end
+
 end

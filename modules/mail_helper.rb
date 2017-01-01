@@ -6,7 +6,7 @@ module MailHelper
   def self.send_email(to_field, subject_text, html_body_text)
     sendgrid_api_key = ENV['SENDGRID_API_KEY']
     if sendgrid_api_key.nil? or sendgrid_api_key.empty?
-      puts 'MailHelper/send_email - SendGrid API key is not configured so cannot send email'
+      LogHelper.mail_helper('send_email', 'SENDGRID_API_KEY not configured so cannot send email')
       return
     end
 
@@ -19,9 +19,14 @@ module MailHelper
 
       sg = SendGrid::API.new(api_key: ENV['SENDGRID_API_KEY'])
       response = sg.client.mail._('send').post(request_body: mail.to_json)
-      puts response.status_code.to_s + ', ' + response.body.to_s + ', ' + response.headers.to_s
-    rescue Exception => e
-      puts "MailHelper/send_email - exception thrown: #{e.message}"
+
+      # Status Codes & Errors: https://sendgrid.com/docs/API_Reference/Web_API_v3/Mail/errors.html
+      # 2xx responses indicate a successful request
+      if response.status_code < 200 || response.status_code >= 300
+        raise StandardError, "Error sending email: #{response.status_code.to_s}, #{response.body.to_s}, #{response.headers.to_s}"
+      end
+    rescue StandardError => e
+      LogHelper.mail_helper('send_email', "exception thrown: #{e.message}")
     end
   end
 
