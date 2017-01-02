@@ -191,6 +191,7 @@ class Patch < ActiveRecord::Base
         'updated_at' => updated_at.strftime('%Y-%m-%d %H:%M:%S'),
         'download_count' => download_count,
         'abuse_count' => abuse_count,
+        'revision' => revision,
         'resource' => '/patch/download/' + guid.to_s
     }.tap do |h|
       if parent_guid.present?
