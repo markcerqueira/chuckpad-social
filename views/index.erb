@@ -3,147 +3,95 @@
   <link rel="stylesheet" type="text/css" href="/main.css">
   <link rel="stylesheet" type="text/css" href="/normalize.css">
   <link rel="stylesheet" type="text/css" href="/table.css">
+
+  <style>
+    .top {
+      position: absolute;
+      left: 0;  right: 0;
+      height: 80px;
+      padding: 1em;
+    }
+
+    .left {
+      position: absolute;
+      left: 0; top: 80px; bottom: 0;
+      width: 178px;
+      padding-top: 1em;
+      padding-left: 1em;
+    }
+
+    .main {
+      padding-top: 1em;
+      position: absolute;
+      left: 178px; top: 80px; right: 0; bottom: 0;
+    }
+
+    #wrapper {
+      width: 800px;
+      padding: 0.5em;
+      border: 1px solid black;
+      overflow: hidden; /* will contain if #first is longer than #second */
+    }
+    #first {
+      width: 500px;
+      float:left; /* add this */
+    }
+    #second {
+      overflow: hidden; /* if you don't want #second to wrap below #first */
+    }
+
+    h3 { padding: 0; margin: 0; color: #3e3e3e }
+    h4 { padding: 0; margin: 0; color: #3e3e3e }
+
+    .top { background: #8ff444; }
+    .left { background: #ffffff; }
+    .main { background: #ffffff; }
+  </style>
 </head>
 
-<h1>ChuckPad Social</h1>
-<b>Latest status message:</b> <%= @latest_status_message %>
+<body style="margin: 0px;">
 
-<% unless @logged_in_user.nil? %>
-    <h3>Currently Logged In User</h3>
-    <ul>
-      <li>Username: <b><%= @logged_in_user.username %></b></li>
-      <li><a href='user/logout/<%= @logged_in_user.id %>'>Log Out</a></li>
-    </ul>
-<% else %>
-    <h3>You are not logged in. Go to the <a href="/user">/user</a> page to log in.</h3>
-<% end %>
+  <div class="top">
+  <h3>ChucKPad Social</h3>
+  <h4>Bring ChucK code to life, share ChucK with others, discover ChucK gems</h4>
+  </div>
 
-<div style="width: 100%; display: table;">
-  <div style="display: table-row">
-    <!-- Create Patch -->
-    <div style="width: 600px; display: table-cell; padding-right: 2em;">
-      <h3>Upload a new patch:</h3>
-      <form action="/patch/create" method="POST" enctype="multipart/form-data">
-        <table>
-          <tbody>
-          <tr>
-            <td>Patch Name (if blank upload filename will be used)</td>
-            <td><input type="text" name="patch[name]" value=""/></td>
-          </tr>
-          <tr>
-            <td>Patch Description</td>
-            <td><input type="text" name="patch[description]" value=""/></td>
-          </tr>
-          <tr>
-            <td>Parent Patch GUID</td>
-            <td><input type="text" name="patch[parent_guid]" value=""/></td>
-          </tr>
-          <tr>
-            <td>Featured</td>
-            <td><input type="checkbox" name="patch[featured]" value="0"/></td>
-          </tr>
-          <tr>
-            <td>Documentation</td>
-            <td><input type="checkbox" name="patch[documentation]" value="0"/></td>
-          </tr>
-          <tr>
-            <td>Hidden</td>
-            <td><input type="checkbox" name="patch[hidden]" value="0"/></td>
-          </tr>
-          <tr>
-            <td>File (10 KB max) to upload</td>
-            <td><input type="file" name="patch[data]"></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><input type="submit" value="Create Patch"></td>
-          </tr>
-          </tbody>
-        </table>
-      </form>
-    </div>
+  <div class="left">
+    <!-- Check @mode for highlighting our currently selected tab -->
+    <% if @mode == 'recent' %>
+        <b><a href="/">Recently created</a></b>
+    <% else %>
+        <a href="/">Recently created</a>
+    <% end %>
+  </div>
 
-    <!-- Update Patch -->
-    <div style="display: table-cell;">
-      <h3>Update a patch:</h3>
-      <form action="/patch/update" method="POST" enctype="multipart/form-data">
-        <table>
-          <tbody>
-          <tr>
-            <td>Patch Id</td>
-            <td><input type="text" name="patch[id]" value=""/></td>
-          </tr>
-          <tr>
-            <td>Patch Name (if blank upload filename will be used)</td>
-            <td><input type="text" name="patch[name]" value=""/></td>
-          </tr>
-          <tr>
-            <td>Patch Description</td>
-            <td><input type="text" name="patch[description]" value=""/></td>
-          </tr>
-          <tr>
-            <td>File (10 KB max) to upload</td>
-            <td><input type="file" name="patch[data]"></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td><input type="submit" value="Update Patch"></td>
-          </tr>
-          </tbody>
-        </table>
-      </form>
+  <div class="main">
+    <div style="overflow-x: auto">
+      <table class="fullscreen">
+        <tbody>
+        <% @patches.each do |patch| %>
+            <div id="wrapper">
+              <div id="first">
+                <%= patch.name %><br>
+                <%= patch.description %>
+              </div>
+
+              <div id="second">
+                Created by: <b><%= patch.creator.username %></b><br>
+                <a href='patch/download/<%= patch.guid %>'>Download ChucK source code</a><br>
+
+                <audio controls preload="none" style="width:360px;">
+                  <source src="patch/play/<%= patch.guid %>" type="audio/mp4" />
+                </audio>
+              </div>
+             </div>
+            </tr><br>
+        <% end %>
+        </tbody>
+      </table>
     </div>
   </div>
-</div>
 
-<h3>API - best viewed using <a href="https://chrome.google.com/webstore/detail/jsonview/chklaanhfefbnpoihckbnefhakgolnmc">JSONView extension</a></h3>
-<ul>
-  <li><a href="/patch/new/?type=1">/patch/new/?type=1</a> - returns recently created patches</li>
-  <li><a href="/patch/user/1">/patch/user/1</a> - returns all non-hidden patches for user with id = 1</li>
-  <li><a href="/patch/info/1">/patch/info/1</a> - returns information on patch with id = 1</li>
-  <li><a href="/patch/featured?type=1">/patch/featured?type=1</a> - returns all unhidden patches flagged as featured</li>
-  <li><a href="/patch/documentation?type=1">/patch/documentation?type=1</a> - returns all unhidden patches flagged as documentation</li>
-  <li><a href="/user">/user</a> - page to explore the user API</li>
-</ul>
-
-<h3>All Patches (sorted by most recently created)</h3>
-<div style="overflow-x: auto; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px;">
-  <table class="fullscreen" cellpadding="10">
-    <thead>
-    <th>Id</th>
-    <th>GUID</th>
-    <th>Name</th>
-    <th>Description</th>
-    <th>Parent GUID</th>
-    <th>Featured</th>
-    <th>Documentation</th>
-    <th>Hidden</th>
-    <th>Revision</th>
-    <th>Creator</th>
-    <th>Actions</th>
-    </thead>
-    <tbody>
-    <% @patches.each do |patch| %>
-        <tr>
-          <td><%= patch.id %></td>
-          <td><%= patch.guid %></td>
-          <td><%= patch.name %></td>
-          <td><%= patch.description %></td>
-          <td><%= patch.parent_guid %></td>
-          <td><%= patch.featured %></td>
-          <td><%= patch.documentation %></td>
-          <td><%= patch.hidden %></td>
-          <td><%= patch.revision %></td>
-          <td><%= patch.creator.username %></td>
-          <td>
-              <a href='patch/download/<%= patch.guid %>'>Download</a>
-            / <a href='patch/download/<%= patch.parent_guid %>'>Download Parent</a>
-            / <a href='patch/delete/<%= patch.id %>'>Delete</a>
-          </td>
-        </tr>
-    <% end %>
-    </tbody>
-  </table>
-</div>
+</body>
 
 </html>

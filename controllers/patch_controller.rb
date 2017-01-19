@@ -7,8 +7,8 @@ class PatchController < ApplicationController
 
   # Index page that shows index.erb and lists all patches
   get '/' do
-    @latest_status_message = session[:status]
-    @patches = Patch.order('id DESC').all
+    @mode = 'recent'
+    @patches = Patch.where(patch_type: Patch::MINI_AUDICLE_TYPE, hidden: false, deleted: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN)
 
     begin
       @logged_in_user = User.get_user(id: session[:user_id])
@@ -173,6 +173,37 @@ class PatchController < ApplicationController
     content_type 'application/octet-stream'
 
     patch_resource.data
+  end
+
+  # URL for ChucK rendering service. The first points to the Digital Ocean droplet, the second to a local Docker container
+  # See more: https://github.com/markcerqueira/chuck-renderer
+  CHUCK_RENDERER_URL = 'http://chuck-renderer.4860ca31.svc.dockerapp.io:9000/render/'
+  # CHUCK_RENDERER_URL = '0.0.0.0:9000/render/'
+
+  # Takes ChucK file, renders it as an m4a, and returns the resource
+  get '/play/:guid/?' do
+    begin
+      patch = Patch.get_patch(params[:guid])
+      patch_resource = PatchResource.get_most_recent_resource(params[:guid])
+    rescue PatchNotFoundError
+      ResponseHelper.resource_error(self)
+      return
+    end
+
+    # TODO Enforce only patches with type ChucK can get past this point
+
+    # Data is binary array so write that to a temporary file. Use a consistent filename so we only do this operation
+    # once per patch guid + revision
+    renderer_file_name = 'renderer/' + patch.guid + patch.revision.to_s + '.ck'
+    if !File.exist?(renderer_file_name)
+      File.open(renderer_file_name, 'wb') {
+          |f| f.write(patch_resource.data)
+      }
+    end
+
+    # Hit our chuck-renderer endpoint to generate a .m4a file to play
+    # See more: https://github.com/markcerqueira/chuck-renderer
+    RestClient.post CHUCK_RENDERER_URL, :resource => File.open(renderer_file_name, 'r')
   end
 
   get '/versions/?' do

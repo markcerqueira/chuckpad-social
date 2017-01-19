@@ -1,0 +1,2 @@
+# We write files to here in the /patch/play/:guid/? method but do not want them commited to version control
+*.ck

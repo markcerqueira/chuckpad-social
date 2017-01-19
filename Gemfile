@@ -16,6 +16,7 @@ gem "mail"
 gem "config_env"
 gem "sendgrid-ruby", "~> 4.0.2"
 gem "staccato"
+gem "rest-client"
 
 group :development do
   gem "better_errors"
