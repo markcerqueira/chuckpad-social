@@ -3,7 +3,6 @@ require 'sinatra/base'
 
 require 'active_record'
 require 'bcrypt'
-require 'better_errors'
 require 'digest'
 require 'email_validator'
 require 'json'
@@ -46,6 +45,8 @@ class ApplicationController < Sinatra::Base
   end
 
   configure :development do
+    require 'better_errors'
+
     use BetterErrors::Middleware
     BetterErrors.application_root = __dir__
   end
