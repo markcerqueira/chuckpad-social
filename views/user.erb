@@ -80,33 +80,4 @@
   </div>
 </div>
 
-<!-- TODO Remove this (or block it on non-dev running) before release -->
-<h3>All Users</h3>
-<div style="overflow-x: auto; -webkit-border-radius: 5px; -moz-border-radius: 5px; border-radius: 5px;">
-  <table class="fullscreen" cellpadding="10">
-    <thead>
-    <th>Id</th>
-    <th>Username</th>
-    <!-- <th>Email</th> -->
-    <th>Admin</th>
-    <th>Email Confirmed</th>
-    <th>Patch Count (All / Visible)</th>
-    <th>Actions</th>
-    </thead>
-    <tbody>
-    <% @users.each do |user| %>
-        <tr>
-          <td><%= user.id %></td>
-          <td><%= user.username %></td>
-          <!-- <td><%= user.email %></td> -->
-          <td><%= user.admin %></td>
-          <td><%= user.email_confirmed %></td>
-          <td><%= "#{user.patches.count}/#{user.patches.visible.count}" %></td>
-          <td><a href='patch/user/<%= user.id %>'>Patch List</a></td>
-        </tr>
-    <% end %>
-    </tbody>
-  </table>
-</div>
-
 </html>
