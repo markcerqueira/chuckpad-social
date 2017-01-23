@@ -23,9 +23,15 @@ class WebController < ApplicationController
     @mode = 'user'
     @search_username = params[:username]
 
-    user = User.get_user(username: @search_username)
+    begin
+      user = User.get_user(username: @search_username)
+      @patches = Patch.where(patch_type: Patch::MINI_AUDICLE_TYPE, hidden: false, creator_id: user.id, deleted: false).order('id DESC')
+    rescue UserNotFoundError
+      # TODO Show that we could not find the user
+      @mode = 'recent'
+      @patches = Patch.where(patch_type: Patch::MINI_AUDICLE_TYPE, hidden: false, deleted: false).order('id DESC').limit(PatchController::RECENT_PATCHES_TO_RETURN)
 
-    @patches = Patch.where(patch_type: Patch::MINI_AUDICLE_TYPE, hidden: false, creator_id: user.id, deleted: false).order('id DESC')
+    end
 
     erb :index
   end
