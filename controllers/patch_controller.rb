@@ -5,20 +5,6 @@ class PatchController < ApplicationController
   # Used by /patches/new
   RECENT_PATCHES_TO_RETURN = 20
 
-  # Index page that shows index.erb and lists all patches
-  get '/' do
-    @mode = 'recent'
-    @patches = Patch.where(patch_type: Patch::MINI_AUDICLE_TYPE, hidden: false, deleted: false).order('id DESC').limit(RECENT_PATCHES_TO_RETURN)
-
-    begin
-      @logged_in_user = User.get_user(id: session[:user_id])
-    rescue UserNotFoundError
-      # Do nothing
-    end
-
-    erb :index
-  end
-
   # Creates a new patch
   post '/create/?' do
     # LogHelper.patch_controller_log('create', params)

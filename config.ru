@@ -11,7 +11,7 @@ require './controllers/application_controller'
 
 Dir.glob('./{config,controllers,errors,extensions,helpers,models,modules}/*.rb').each { |file| require file }
 
-map('/') { run ApplicationController }
+map('/') { run WebController }
 map('/patch') { run PatchController }
 map('/user/') { run UserController }
 map('/.well-known/') { run ChallengeController }

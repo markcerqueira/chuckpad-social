@@ -53,8 +53,8 @@
 
   <div class="top">
     <div style="float: left;">
-      <h3>ChucKPad Social</h3>
-      <h4>Bring ChucK code to life, share ChucK with others, discover ChucK gems</h4>
+      <h3>ChuckPad</h3>
+      <h4>Bring ChucK code to life, share ChucK with others, discover ChucK gems!</h4>
     </div>
 
     <div style="float: right;">
@@ -66,10 +66,24 @@
   <div class="left">
     <!-- Check @mode for highlighting our currently selected tab -->
     <% if @mode == 'recent' %>
-        <b><a href="/">Recently created</a></b>
-    <% else %>
+        <b><u>Recently created</u></b>
+        <a href="examples">Examples</a>
+    <% elsif @mode == 'examples' %>
         <a href="/">Recently created</a>
+        <b><u>Examples</u></b>
+    <% elsif @mode == 'user' %>
+        <a href="/">Recently created</a>
+        <a href="examples">Examples</a><br>
+        <b><u><%= @search_username %></u></b>
     <% end %>
+
+    <br>
+    <br>
+    <form action="find" method="POST">
+      Find by user:<br>
+      <input type="text" size="12" name="username" value=""/><br>
+      <input type="submit" value="Search">
+    </form>
   </div>
 
   <div class="main">

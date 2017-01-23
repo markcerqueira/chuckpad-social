@@ -95,15 +95,6 @@ class ApplicationController < Sinatra::Base
     end
   end
 
-  # Main index page for app will route to the patches index page at erb :index
-  get '/?' do
-    redirect '/patch'
-  end
-
-  get '/about/?' do
-    erb :about
-  end
-
   after do
     # Close the connection after the request is done so that we don't deplete the ActiveRecord connection pool.
     ActiveRecord::Base.connection.close
