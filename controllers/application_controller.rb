@@ -100,6 +100,10 @@ class ApplicationController < Sinatra::Base
     redirect '/patch'
   end
 
+  get '/about/?' do
+    erb :about
+  end
+
   after do
     # Close the connection after the request is done so that we don't deplete the ActiveRecord connection pool.
     ActiveRecord::Base.connection.close
