@@ -5,7 +5,7 @@ class WebController < ApplicationController
   # index.erb display in recent patches mode
   get '/?' do
     @mode = 'recent'
-    @patches = Patch.where(patch_type: Patch::MINI_AUDICLE_TYPE, hidden: false, deleted: false).order('id DESC').limit(PatchController::RECENT_PATCHES_TO_RETURN)
+    @patches = Patch.where(patch_type: Patch::MINI_AUDICLE_TYPE, hidden: false, documentation: false, deleted: false).order('id DESC').limit(PatchController::RECENT_PATCHES_TO_RETURN)
 
     erb :index
   end
