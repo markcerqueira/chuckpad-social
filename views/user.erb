@@ -3,10 +3,24 @@
   <link rel="stylesheet" type="text/css" href="/main.css">
   <link rel="stylesheet" type="text/css" href="/normalize.css">
   <link rel="stylesheet" type="text/css" href="/table.css">
+  <link rel="stylesheet" type="text/css" href="/chuckpad.css">
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 </head>
 
-<h1>ChuckPad Social</h1>
-<b>Latest status message:</b> <%= @latest_status_message %>
+<body style="margin: 0px;">
+
+<div style="background: #8ff444; padding: 1em;">
+  <div>
+    <h3>ChuckPad</h3>
+    <h4>Bring ChucK code to life, share ChucK with others, discover ChucK gems!</h4>
+  </div>
+</div>
+<br>
+
+<div style="padding: 1em;">
+
+<b>Latest status message:</b> <%= @latest_status_message %><br><br>
 
 <% unless get_logged_in_user.nil? %>
     <h3>Currently Logged In User</h3>
@@ -20,10 +34,10 @@
           <td><input type="submit" value="Change"></td>
         </form>
       </li>
-      <li><a href='user/logout'>Log Out</a></li>
+      <li><a href='logout'>Log Out</a></li>
     </ul>
 <% else %>
-    <h3>You are not logged in.</h3>
+    <h3>You are not logged in.</h3><br>
 <% end %>
 
 <div style="width: 100%; display: table;">
@@ -79,5 +93,9 @@
     </div>
   </div>
 </div>
+
+</div>
+
+</body>
 
 </html>

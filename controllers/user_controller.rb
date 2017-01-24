@@ -210,16 +210,16 @@ class UserController < ApplicationController
     ResponseHelper.success(self, request, 'Password updated')
   end
 
-  # Clears session cookie (web) or invalidates auth token (native clients)
+  # Logging out on the web frontend clears the session cookie
+  get '/logout/?' do
+    user_id = session[:user_id]
+    session[:user_id] = nil
+    redirect_to_index_with_status_msg(self, 'Logged out user with id ' + user_id.to_s)
+  end
+
+  # Invalidates auth token (native clients)
   post '/logout/?' do
     LogHelper.user_controller_log('logout', params)
-
-    # Logging out on web
-    unless RequestHelper.from_native_client(request)
-      user_id = session[:user_id]
-      session[:user_id] = nil
-      redirect_to_index_with_status_msg('Logged out user with id ' + user_id.to_s)
-    end
 
     # Logging out on native clients
     token_invalidated = AuthToken.invalidate_token(params[:user_id], params[:auth_token])
