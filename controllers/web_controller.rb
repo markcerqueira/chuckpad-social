@@ -20,6 +20,10 @@ class WebController < ApplicationController
 
   # index.erb display patches for a particular user
   post '/find/?' do
+    redirect "/find/#{params[:username]}"
+  end
+
+  get '/find/:username/?' do
     @mode = 'user'
     @search_username = params[:username]
 

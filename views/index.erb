@@ -60,7 +60,7 @@
               </div>
 
               <div id="second">
-                Created by: <b><%= patch.creator.username %></b><br>
+                Created by: <a href="/find/<%= patch.creator.username %>"><b><%= patch.creator.username %></b></a><br>
                 <a href='patch/download/<%= patch.guid %>'>Download ChucK source code</a><br>
 
                 <audio controls preload="none" style="width:360px;">
