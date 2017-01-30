@@ -45,5 +45,9 @@ class WebController < ApplicationController
     erb :about
   end
 
+  get '/renderer/?' do
+    redirect 'http://chuck-renderer.4860ca31.svc.dockerapp.io:9000/debug'
+  end
+
 end
 
