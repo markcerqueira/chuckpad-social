@@ -13,7 +13,7 @@ chuckpad-social is an upload-download service for ChucK patches in the MiniAudic
 * When you cd into the chuckpad-social directory, you may be prompted to install the right version of Ruby. Do so if needed. Example: `rvm install ruby-2.3.1`
 * If you just installed a new version of Ruby, you'll likely need to get the bundler gem first: `gem install bundle`
 * Install the rest of the gems: `ARCHFLAGS="-arch x86_64" bundle install` If you are getting errors running this, try running `xcode-select --install` as this has [cleared up issues for other people][3].
-* Install [Postgres][4] and create the database if you have not yet. On the command-line, run `psql` and then `CREATE DATABASE chuckpad-social;`
+* Install [Postgres][4] and create the database if you have not yet. On the command-line, run `psql` and then `CREATE DATABASE "chuckpad-social";`
 * Run `bundle exec rake db:migrate` to run all migrations on the database.
 * Run the service locally: `bundle exec rerun 'rackup -p 9292'`.
 * Locally visit [localhost:9292](http://localhost:9292/). If you see connection errors when you visit this page, you need to lanuch the Postgres app! As files are changed the rerun gem will automatically reload the app.
