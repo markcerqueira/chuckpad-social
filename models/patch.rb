@@ -81,6 +81,11 @@ class Patch < ActiveRecord::Base
       p.download_count = 0
       p.data_hash = patch_data_digest
 
+      if params[:patch_latitude].present? && params[:patch_longitude].present?
+        p.lat = params[:patch_latitude].to_f.round.to_i
+        p.lng = params[:patch_longitude].to_f.round.to_i
+      end
+
       if params[:patch_hidden].present?
         p.hidden = params[:patch_hidden]
       end
@@ -140,6 +145,19 @@ class Patch < ActiveRecord::Base
       revision_made = true
     end
 
+    if params.has_key?(:patch_latitude) && params.has_key?(:patch_longitude)
+      latitude = params[:patch_latitude]
+      longitude = params[:patch_longitude]
+      if latitude.blank? && longitude.blank?
+        self.lat = nil
+        self.lng = nil
+      else
+        self.lat = latitude.to_f.round.to_i
+        self.lng = longitude.to_f.round.to_i
+      end
+      revision_made = true
+    end
+
     if revision_made
       self.updated_at = DateTime.now.new_offset(0)
       self.revision = self.revision + 1
@@ -192,6 +210,8 @@ class Patch < ActiveRecord::Base
         'download_count' => download_count,
         'abuse_count' => abuse_count,
         'revision' => revision,
+        'latitude' => lat.to_s,
+        'longitude' => lng.to_s,
         'resource' => '/patch/download/' + guid.to_s
     }.tap do |h|
       if parent_guid.present?
