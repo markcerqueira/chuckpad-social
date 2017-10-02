@@ -5,6 +5,9 @@ class PatchController < ApplicationController
   # Used by /patches/new
   RECENT_PATCHES_TO_RETURN = 20
 
+  # Patches per world region
+  PATCHES_PER_WORLD_REGION = 10
+
   # Creates a new patch
   post '/create/?' do
     # LogHelper.patch_controller_log('create', params)
@@ -159,6 +162,30 @@ class PatchController < ApplicationController
     content_type 'application/octet-stream'
 
     patch_resource.data
+  end
+
+  # Returns a random collection of patches from around the world
+  get '/world/?' do
+    begin
+      DigestHelper.validate_digest(request.params)
+    rescue DigestError => error
+      ResponseHelper.error(self, request, error.message)
+      return
+    end
+
+    AnalyticsHelper.track_patch_event(action: 'world', params: params)
+
+    world_patches ||= []
+
+    # Grab PATCHES_PER_WORLD_REGION from each of the latitude regions in ranges
+    # This logic can be updated to support longitudes or larger/finer ranges of coordinates
+    ranges ||= [[-180, -120], [-120, -60], [-60, 0], [0, 60], [60, 120], [120, 180]]
+    ranges.each { |range|
+      # mySQL uses RAND(), PostgreSQL uses RANDOM()
+      world_patches.concat Patch.where('lat >= ? AND lat <= ? AND patch_type = ? AND hidden = FALSE', range[0], range[1], params[:type].to_i).order('RANDOM()').first(PATCHES_PER_WORLD_REGION)
+    }
+
+    ResponseHelper.success_with_json_msg(self, world_patches.to_json)
   end
 
   # URL for ChucK rendering service. The first points to the Digital Ocean droplet, the second to a local Docker container
