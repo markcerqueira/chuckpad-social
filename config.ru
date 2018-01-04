@@ -14,4 +14,5 @@ Dir.glob('./{config,controllers,errors,extensions,helpers,models,modules}/*.rb')
 map('/') { run WebController }
 map('/patch') { run PatchController }
 map('/user/') { run UserController }
+map('/live/') { run LiveController }
 map('/.well-known/') { run ChallengeController }
