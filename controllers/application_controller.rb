@@ -30,6 +30,7 @@ require './modules/request_helper'
 
 require './errors/auth_token_invalid_error'
 require './errors/digest_error'
+require './errors/live_session_errors'
 require './errors/patch_create_error'
 require './errors/patch_not_found_error'
 require './errors/patch_permission_error'

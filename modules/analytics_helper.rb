@@ -5,6 +5,11 @@ module AnalyticsHelper
 
   @tracker = Staccato.tracker(ENV['ANALYTICS_ID'])
 
+  # Called to track events under the 'live' category
+  def self.track_live_event(action: nil, params: nil)
+    track_event(category: 'live', action: action, params: params)
+  end
+
   # Called to track events under the 'patch' category
   def self.track_patch_event(action: nil, params: nil)
     track_event(category: 'patch', action: action, params: params)
