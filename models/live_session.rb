@@ -13,6 +13,8 @@ class LiveSession < ActiveRecord::Base
       ls.title = (params[:session_title] || '')
       ls.creator_id = user.id
       ls.session_type = params[:session_type].to_i
+      ls.created_at = Time.now
+      ls.last_active = Time.now
     end
 
     unless live_session.save

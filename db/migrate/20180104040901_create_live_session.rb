@@ -14,8 +14,8 @@ class CreateLiveSession < ActiveRecord::Migration[5.1]
 
         t.integer :session_type
 
-        t.datetime :created_at, :default => Time.now
-        t.datetime :last_active, :default => Time.now
+        t.datetime :created_at
+        t.datetime :last_active
       end
     end
 
