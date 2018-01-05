@@ -2,6 +2,8 @@ require './controllers/application_controller'
 
 class LiveController < ApplicationController
 
+  RECENT_CREATED_SESSIONS_TO_RETURN = 20
+
   # Creates a new live session
   post '/create/?' do
     # LogHelper.live_controller_log('create', params)
@@ -58,6 +60,12 @@ class LiveController < ApplicationController
 
     AnalyticsHelper.track_live_event(action: 'close', params: params)
     ResponseHelper.success(self, request, live_session.to_json, 'Updated live session with guid ' + params[:session_guid])
+  end
+
+  # Get the most recently created (and open) LiveSessions
+  get '/recent-created/?' do
+    AnalyticsHelper.track_live_event(action: 'recent-created', params: params)
+    ResponseHelper.success_with_json_msg(self, LiveSession.where(session_type: params[:type].to_i, state:  LiveSession::STATE_ACTIVE).order('created_at DESC').limit(RECENT_CREATED_SESSIONS_TO_RETURN).to_json)
   end
 
 end
