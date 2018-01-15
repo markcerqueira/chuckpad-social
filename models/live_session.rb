@@ -3,6 +3,10 @@ class LiveSession < ActiveRecord::Base
   STATE_ACTIVE = 0
   STATE_CLOSED = 1
 
+  # File size limit for live sesion creation (see create_live_session)
+  MAX_LIVE_SESSION_FILE_SIZE_KB = 10
+  MAX_LIVE_SESSION_FILE_SIZE_BYTES = MAX_LIVE_SESSION_FILE_SIZE_KB * 1000
+
   # Helper method that creates a live session from the params given, saves it, and returns it.
   # Throws an error with a message if anything goes wrong during the creation process.
   #
@@ -15,6 +19,15 @@ class LiveSession < ActiveRecord::Base
       ls.session_type = params[:session_type].to_i
       ls.created_at = Time.now
       ls.last_active = Time.now
+
+      if params[:session_data] != nil
+        if File.size(params[:session_data][:tempfile]) > MAX_LIVE_SESSION_FILE_SIZE_BYTES
+          LogHelper.live_session_log('create_live_session', 'Live session data is large')
+          raise LiveSessionCreateError, "Live session data is too large. The maximum allowed is #{MAX_LIVE_SESSION_FILE_SIZE_BYTES} KB."
+        end
+
+        ls.session_data = params[:session_data][:tempfile].read
+      end
     end
 
     unless live_session.save
@@ -69,6 +82,10 @@ class LiveSession < ActiveRecord::Base
     }.tap do |h|
       creator = User.get_user(id: creator_id)
       h['creator_username'] = creator.username
+
+      if session_data.present?
+        h['session_data'] = Base64.encode64(session_data)
+      end
     end
   end
 

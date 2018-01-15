@@ -14,6 +14,9 @@ class CreateLiveSession < ActiveRecord::Migration[5.1]
 
         t.integer :session_type
 
+        # session_data represents arbitrary meta-data associated with the session
+        t.binary :session_data
+
         t.datetime :created_at
         t.datetime :last_active
       end
