@@ -1,6 +1,3 @@
-# require './app'
-# run Sinatra::Application
-
 $stdout.sync = true
 
 # Load config/env.rb first so application_controller can initialize properly
