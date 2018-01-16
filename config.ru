@@ -1,6 +1,3 @@
-# require './app'
-# run Sinatra::Application
-
 $stdout.sync = true
 
 # Load config/env.rb first so application_controller can initialize properly
@@ -14,4 +11,5 @@ Dir.glob('./{config,controllers,errors,extensions,helpers,models,modules}/*.rb')
 map('/') { run WebController }
 map('/patch') { run PatchController }
 map('/user/') { run UserController }
+map('/live/') { run LiveController }
 map('/.well-known/') { run ChallengeController }

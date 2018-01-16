@@ -13,6 +13,14 @@ module LogHelper
     shared_log('Patch', method, o)
   end
 
+  def self.live_session_log(method, o)
+    shared_log('LiveSession', method, o)
+  end
+
+  def self.live_controller_log(method, o)
+    shared_log('LiveController', method, o)
+  end
+
   def self.patch_controller_log(method, o)
     shared_log('PatchController', method, o)
   end

@@ -57,6 +57,7 @@ These are automatically set by Heroku and can be left alone:
 * https://github.com/SergXIIIth/config_env
 * https://github.com/mikel/mail
 * https://coderwall.com/p/u56rra/ruby-on-rails-user-signup-email-confirmation-tutorial
+* https://github.com/janko-m/sinatra-activerecord
 
 [1]: http://postgresapp.com/
 [2]: http://chuckpad-social.herokuapp.com/

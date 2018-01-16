@@ -11,6 +11,7 @@ class AbuseReport < ActiveRecord::Base
       abuse_report = AbuseReport.new do |r|
         r.user_id = user_id
         r.patch_id = patch.id
+        r.created_at = Time.now
       end
 
       patch.abuse_count = patch.abuse_count + 1
